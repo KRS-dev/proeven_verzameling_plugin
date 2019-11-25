@@ -38,13 +38,13 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	db_connect.py db_connect_dialog.py
+	db_connect.py db_connect_dialog.py qgis_backend.py
 
 PLUGINNAME = db_connect
 
 PY_FILES = \
 	__init__.py \
-	db_connect.py db_connect_dialog.py
+	db_connect.py db_connect_dialog.py qgis_backend.py
 
 UI_FILES = db_connect_dialog_base.ui
 
