@@ -6,7 +6,7 @@
 #		begin				: 2019-10-20
 #		git sha				: $Format:%H$
 #		copyright			: (C) 2019 by Kevin Schuurman
-#		email				: k.schuurman1@rotterdam.nl
+#		email				: kevinschuurman98@gmail.com
 # ***************************************************************************/
 #
 #/***************************************************************************
