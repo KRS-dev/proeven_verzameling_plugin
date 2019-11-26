@@ -30,7 +30,7 @@ from .resources import *
 # Import the code for the dialog
 from .db_connect_dialog import dbconnectDialog
 import os.path
-import qgis_backend as qb
+from . import qgis_backend as qb
 from qgis.core import QgsProject
 
 
@@ -300,7 +300,6 @@ class dbconnect:
 
 
         import sys, os
-        import qgis_backend as qb
         import pandas as pd
         import numpy as np
         import xlwt
@@ -380,8 +379,7 @@ class dbconnect:
                                 qb.get_trx_dlp_result(gtm_ids), 
                                 ea = ea, 
                                 plot_name = 'Least Squares Analysis, ea: ' + str(ea) + '\n' + key,
-                                show_plot = show_plot, 
-                                save_plot = save_plot
+                                show_plot = show_plot
                                 )
                             df_lst_temp = pd.DataFrame(index = [key], data = [[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],\
                                 columns=['min(Vg)', 'max(Vg)','fi','coh','Abs. Sq. Err.','Abs. Sq. Err./N','Mean Rel. Err. %','N'])
@@ -413,8 +411,9 @@ class dbconnect:
         # Check if the .xlsx file exists
         output_file_dir = os.path.join(output_location, output_file)
         if os.path.exists(output_file_dir) == False:
-            book = xlwt.Workbook()
-            book.save(output_file_dir)
+            #book = xlwt.Workbook()
+            #book.save(output_file_dir)
+            pass
         else:
             name, ext = output_file.split('.')
             i = 1
