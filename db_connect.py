@@ -403,18 +403,12 @@ class dbconnect:
 
         # Check if the .xlsx file exists
         output_file_dir = os.path.join(output_location, output_file)
-        if os.path.exists(output_file_dir) == False:
-            #book = xlwt.Workbook()
-            #book.save(output_file_dir)
-            pass
-        else:
+        if os.path.exists(output_file_dir):
             name, ext = output_file.split('.')
             i = 1
             while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
             output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
-            book = openpyxl.Workbook()
-            book.save(output_file_dir)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer: #writer in append mode so that the NEN tables are kept
