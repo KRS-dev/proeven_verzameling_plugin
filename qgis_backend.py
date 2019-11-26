@@ -288,8 +288,7 @@ def get_least_squares(
     df_trx_dlp_result, 
     plot_name = 'Lst_Sqrs_name', 
     ea = 2, 
-    show_plot = True, 
-    save_plot = False
+    show_plot = True
     ):
     df = select_on_ea( df_trx_dlp_result, ea)
     data_full = (df.p, df.q)
@@ -318,7 +317,7 @@ def get_least_squares(
     ### Einde Least Squares fitting
 
     
-    if show_plot or save_plot:
+    if show_plot:
         dlp1, dlp2, dlp3 = df[(df.deelproef_nummer == 1)], df[(df.deelproef_nummer == 2)], df[(df.deelproef_nummer == 3)]
         data_colors = ((dlp1.p, dlp1.q, dlp1.gtm_id), (dlp2.p, dlp2.q, dlp2.gtm_id), (dlp3.p, dlp3.q, dlp3.gtm_id))
         colors = ('red', 'green', 'blue')
@@ -380,8 +379,6 @@ def get_least_squares(
         plt.tight_layout()
         if show_plot:
             plt.show()
-        if save_plot:
-            pass
     return round(np.degrees(fi),1), round(coh,1), round(E), round(E_per_n,1), round(eps*100,1), N
 
 # Querying compression tests\samendrukkingsproeven
