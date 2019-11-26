@@ -411,8 +411,9 @@ class dbconnect:
         # Check if the .xlsx file exists
         output_file_dir = os.path.join(output_location, output_file)
         if os.path.exists(output_file_dir) == False:
-            book = xlwt.Workbook()
-            book.save(output_file_dir)
+            #book = xlwt.Workbook()
+            #book.save(output_file_dir)
+            pass
         else:
             name, ext = output_file.split('.')
             i = 1
