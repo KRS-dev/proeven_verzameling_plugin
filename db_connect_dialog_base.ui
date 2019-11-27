@@ -56,7 +56,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QgsFieldComboBox" name="cmb_databases"/>
+       <widget class="QComboBox" name="cmb_databases"/>
       </item>
       <item>
        <widget class="QToolButton" name="tb_newConnection">
@@ -515,11 +515,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>QgsFieldComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsfieldcombobox.h</header>
-  </customwidget>
-  <customwidget>
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
@@ -543,8 +538,8 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>10</x>
-     <y>430</y>
+     <x>35</x>
+     <y>679</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>
@@ -559,12 +554,12 @@
    <slot>update()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>196</x>
-     <y>263</y>
+     <x>207</x>
+     <y>411</y>
     </hint>
     <hint type="destinationlabel">
-     <x>196</x>
-     <y>303</y>
+     <x>207</x>
+     <y>445</y>
     </hint>
    </hints>
   </connection>
@@ -575,8 +570,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>10</x>
-     <y>430</y>
+     <x>35</x>
+     <y>679</y>
     </hint>
     <hint type="destinationlabel">
      <x>20</x>

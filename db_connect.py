@@ -203,6 +203,13 @@ class dbconnect:
         self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
         self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
 
+        settings = QSettings()
+        allkeys = settings.allKeys()
+        databasekeys = [k for k in allkeys if 'database' in k]
+        #databasekeys = [k.split('/') for k in databasekeys]
+        print(databasekeys)
+        self.dlg.cmb_databases.clear()
+        self.dlg.cmb_databases.addItems(databasekeys)
 
 
         # show the dialog
@@ -275,6 +282,8 @@ class dbconnect:
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Extract')
 
+    def select_database(self):
+        pass
 
     def qgis_frontend(self,
         selected_layer,
