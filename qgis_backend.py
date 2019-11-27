@@ -70,7 +70,7 @@ def get_meetpunten(loc_ids):
             if(all(isinstance(x, int) for x in loc_ids)):
                 values = tuple(loc_ids)
                 query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
-                    + 'INNER JOIN bis_meetpunten ON meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
+                    + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
                     + 'WHERE bis_graf_loc_aanduidingen.loc_id IN %s'
                 fetched, description = fetch(query, (values,))
 
