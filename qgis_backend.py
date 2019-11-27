@@ -8,6 +8,9 @@ Summary: Base functions for qgis_frontend.py, Querying the data from the proeven
 import pandas as pd
 import numpy as np
 import psycopg2 as psy
+#import cx_Oracle as cora 
+#or
+#import pyodbc as cora
 import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
@@ -22,7 +25,7 @@ def fetch (query, data):
         ) as dbcon:
     ## Using an Oracle database:
         '''
-        with cora.connect(
+    with cora.connect(
         user = "",
         password = "",
         dsn = ""*
@@ -61,14 +64,14 @@ def get_loc_ids(QgisLayer):
         raise KeyError('No features were selected in the layer')
 
 # Querying meetpunten
-def get_meetpunten( loc_ids ):
-    if isinstance( loc_ids, ( list, tuple, pd.Series) ):
-        if len( loc_ids ) > 0:
-            if( all( isinstance(x, int) for x in loc_ids )):
+def get_meetpunten(loc_ids):
+    if isinstance(loc_ids, (list, tuple, pd.Series)):
+        if len(loc_ids) > 0:
+            if(all(isinstance(x, int) for x in loc_ids)):
                 values = tuple(loc_ids)
-                query = 'SELECT * FROM graf_loc_aanduidingen '\
-                    + 'INNER JOIN meetpunten ON meetpunten.mpt_id = graf_loc_aanduidingen.loc_id '\
-                    + 'WHERE graf_loc_aanduidingen.loc_id IN %s'
+                query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
+                    + 'INNER JOIN bis_meetpunten ON meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
+                    + 'WHERE bis_graf_loc_aanduidingen.loc_id IN %s'
                 fetched, description = fetch(query, (values,))
 
                 if (0 < len(fetched)):
@@ -95,9 +98,9 @@ def get_geo_dossiers(gds_ids):
         if len(gds_ids) > 0:
             if(all(isinstance(x, int) for x in gds_ids)):
                 values = tuple( gds_ids )
-                query = 'SELECT * FROM geo_dossiers WHERE gds_id IN %s'
+                query = 'SELECT * FROM bis_geo_dossiers WHERE gds_id IN %s'
                 fetched, description = fetch(query, (values,))
-                if ( 0 < len( fetched )):
+                if (0 < len(fetched)):
                     geod_df = pd.DataFrame(fetched)
                     colnames = [ desc[0] for desc in description ]
                     geod_df.columns = colnames
@@ -113,18 +116,18 @@ def get_geo_dossiers(gds_ids):
         raise TypeError('Input is not a list or tuple')    
 
 # Querying geotechnische monsters
-def get_geotech_monsters( bor_ids ):
-    if isinstance( bor_ids, ( list, tuple, pd.Series) ):
-        if len( bor_ids ) > 0:
-            if( all( isinstance( x, (int)) for x in bor_ids )):
+def get_geotech_monsters(bor_ids):
+    if isinstance(bor_ids, (list, tuple, pd.Series)):
+        if len(bor_ids) > 0:
+            if(all(isinstance(x, (int)) for x in bor_ids)):
                 values = tuple(bor_ids)
-                query = 'SELECT * FROM geotech_monsters WHERE bor_id IN %s'
+                query = 'SELECT * FROM bis_geotech_monsters WHERE bor_id IN %s'
                 fetched, description = fetch(query, (values,))
-                if( len( fetched ) > 0 ):
-                    g_mon_df = pd.DataFrame( fetched )
-                    colnames = [ desc[0] for desc in description ]
+                if(len(fetched) > 0):
+                    g_mon_df = pd.DataFrame(fetched)
+                    colnames = [desc[0] for desc in description]
                     g_mon_df.columns = colnames
-                    g_mon_df['z_coordinaat_laag'] = pd.to_numeric( g_mon_df['z_coordinaat_laag'] )
+                    g_mon_df['z_coordinaat_laag'] = pd.to_numeric(g_mon_df['z_coordinaat_laag'])
                     return g_mon_df
                 else:
                     raise ValueError('These selected boring(en): ' + str(values) + \
@@ -137,24 +140,24 @@ def get_geotech_monsters( bor_ids ):
         raise TypeError('Input is not a list or tuple')
 
 # Filter on height of the Geotechnical monsters        
-def select_on_z_coord( g_mon_df, zmax, zmin ):
-    if isinstance( g_mon_df, pd.DataFrame ):
-        new_g_mon_df = g_mon_df[( zmax > g_mon_df.z_coordinaat_laag ) & ( g_mon_df.z_coordinaat_laag > zmin )]
+def select_on_z_coord(g_mon_df, zmax, zmin):
+    if isinstance(g_mon_df, pd.DataFrame):
+        new_g_mon_df = g_mon_df[(zmax > g_mon_df.z_coordinaat_laag) & (g_mon_df.z_coordinaat_laag > zmin)]
         return new_g_mon_df
     else:
          raise TypeError('No pandas dataframe was supplied')
 
 # Querying TRX_proeven
-def get_trx( gtm_ids, proef_type = ('CD') ):
-    if isinstance( gtm_ids, ( list, tuple, pd.Series ) ):
-        if all( any( x == i for i in ('CU','CD','UU') ) for x in proef_type ):
-            if len( gtm_ids ) > 0:
-                if all( isinstance( x, ( int )) for x in gtm_ids ):
+def get_trx(gtm_ids, proef_type = ('CD')):
+    if isinstance(gtm_ids, (list, tuple, pd.Series)):
+        if all(any(x == i for i in ('CU', 'CD', 'UU')) for x in proef_type):
+            if len(gtm_ids) > 0:
+                if all(isinstance( x, ( int )) for x in gtm_ids):
                     values = tuple(gtm_ids)
                     proef_type = tuple(proef_type)
-                    query = 'SELECT * FROM trx WHERE proef_type IN %s AND gtm_id IN %s'
+                    query = 'SELECT * FROM bis_trx_proeven WHERE proef_type IN %s AND gtm_id IN %s'
                     fetched, description = fetch(query, (proef_type, values))
-                    if( len( fetched ) > 0 ):
+                    if(len(fetched) > 0):
                         trx_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_df.columns = colnames
@@ -175,7 +178,7 @@ def get_trx( gtm_ids, proef_type = ('CD') ):
         raise TypeError('Input is not a list or tuple')
 
 # Filter on Volumetric weight      
-def select_on_vg( trx_df, Vg_max = 20, Vg_min = 17, soort ='nat' ):
+def select_on_vg(trx_df, Vg_max = 20, Vg_min = 17, soort ='nat'):
     #Volume gewicht y in kN/m3
     if isinstance(trx_df, pd.DataFrame):
         if soort == 'nat':
@@ -190,12 +193,12 @@ def select_on_vg( trx_df, Vg_max = 20, Vg_min = 17, soort ='nat' ):
         raise TypeError('No pandas dataframe was supplied')
 
 # Querying TRX_results
-def get_trx_result( gtm_ids ):
-    if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):  
-        if len( gtm_ids ) > 0:    
+def get_trx_result(gtm_ids):
+    if isinstance(gtm_ids, (list, tuple, pd.Series)):  
+        if len(gtm_ids) > 0:    
             if all(isinstance(x, (int)) for x in gtm_ids):
                 values = tuple( gtm_ids )
-                query = 'SELECT * FROM trx_result WHERE gtm_id IN %s' 
+                query = 'SELECT * FROM bis_trx_proef_result WHERE gtm_id IN %s' 
                 fetched, description = fetch(query, (values,))
                 if( len( fetched ) > 0 ):
                     trx_result_df = pd.DataFrame(fetched)
@@ -214,12 +217,12 @@ def get_trx_result( gtm_ids ):
          raise TypeError('Input is not a list or tuple')   
 
 # Querying TRX_deelproeven
-def get_trx_dlp( gtm_ids ):
+def get_trx_dlp(gtm_ids):
     if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):   
         if len( gtm_ids ) > 0: 
             if all(isinstance(x, (int)) for x in gtm_ids):
                 values = tuple( gtm_ids )
-                query = 'SELECT * FROM trx_dlp WHERE gtm_id IN %s' 
+                query = 'SELECT * FROM bis_trx_dlp WHERE gtm_id IN %s' 
                 fetched, description = fetch(query, (values,))
                 if( len( fetched ) > 0 ):
                     trx_dlp = pd.DataFrame(fetched)
@@ -243,7 +246,7 @@ def get_trx_dlp_result( gtm_ids ):
         if len( gtm_ids ) > 0:
             if all(isinstance(x, (int)) for x in gtm_ids):
                 values = tuple( gtm_ids )
-                query = 'SELECT * FROM trx_dlp_result WHERE gtm_id IN %s' 
+                query = 'SELECT * FROM bis_trx_dlp_result WHERE gtm_id IN %s' 
                 fetched, description = fetch(query, (values,))
                 if( len( fetched ) > 0 ):
                     trx_dlp_result = pd.DataFrame(fetched)
@@ -387,7 +390,7 @@ def get_sdp( gtm_ids ):
         if len( gtm_ids ) > 0:
             if all(isinstance(x, (int)) for x in gtm_ids):
                 values = tuple( gtm_ids )
-                query = 'SELECT * FROM sdp WHERE gtm_id IN %s'
+                query = 'SELECT * FROM bis_sdp WHERE gtm_id IN %s'
                 fetched, description = fetch(query, (values,))
                 if( len( fetched ) > 0 ):
                     sdp_df = pd.DataFrame(fetched)
@@ -412,7 +415,7 @@ def get_sdp_result( gtm_ids ):
         if len( gtm_ids ) > 0: 
             if all(isinstance(x, (int)) for x in gtm_ids):
                 values = tuple( gtm_ids )
-                query = 'SELECT * FROM sdp_result WHERE gtm_id IN %s'
+                query = 'SELECT * FROM bis_sdp_resultaten WHERE gtm_id IN %s'
                 fetched, description = fetch(query, (values,))
                 if( len( fetched ) > 0 ):
                     sdp_result_df = pd.DataFrame(fetched)
@@ -438,12 +441,12 @@ def join_trx_with_trx_results( gtm_ids, proef_type = 'CD' ):
 
                 values = tuple(gtm_ids)
                 #values_str = '(' + ','.join(str(i) for i in values).strip(',') + ')'
-                query = 'SELECT trx.gtm_id, volumegewicht_droog, volumegewicht_nat, ' \
+                query = 'SELECT bis_trx_proeven.gtm_id, volumegewicht_droog, volumegewicht_nat, ' \
                     + 'watergehalte, terreinspanning, bezwijksnelheid, trx_result.trx_volgnr, ea, '\
-                    + 'coh, fi FROM trx ' \
-                    + 'INNER JOIN trx_result ON trx.gtm_id = trx_result.gtm_id '\
-                    + 'AND trx.trx_volgnr = trx_result.trx_volgnr '\
-                    + 'WHERE proef_type = %s AND trx.gtm_id IN %s'
+                    + 'coh, fi FROM bis_trx_proeven ' \
+                    + 'INNER JOIN bis_trx_proef_result ON bis_trx_proeven.gtm_id = bis_trx_proef_result.gtm_id '\
+                    + 'AND bis_trx_proeven.trx_volgnr = bis_trx_proef_result.trx_volgnr '\
+                    + 'WHERE proef_type = %s AND bis_trx_proeven.gtm_id IN %s'
                 fetched, description = fetch(query, (proef_type, values))
                 if( len( fetched ) > 0 ):
                     trx_df = pd.DataFrame(fetched)
