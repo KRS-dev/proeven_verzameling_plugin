@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 import xlwt
 
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
@@ -35,7 +35,7 @@ from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
 from .resources import *
 # Import the code for the dialog
 from .db_connect_dialog import dbconnectDialog        
-from . import qgis_backend as qb 
+from . import qgis_backend 
 
 class dbconnect:
     """QGIS Plugin Implementation."""
@@ -199,69 +199,84 @@ class dbconnect:
         self.dlg.fileWidget.setStorageMode(1)
         #Signalling the reset button 
         self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
+        self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get)
         # Strain slider and spinbox connection
         self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
         self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
-
+        #self.dlg.tb_newConnection.clicked.connect(self.new_connection)
         settings = QSettings()
         allkeys = settings.allKeys()
-        databasekeys = [k for k in allkeys if 'database' in k]
-        keys = [settings.value(k) for k in databasekeys]
+        databasekeys = {}
+        databases = [k for k in allkeys if 'database' in k]
+        databasenames = [settings.value(k) for k in databases]
+        print(databasekeys)
         self.dlg.cmb_databases.clear()
-        self.dlg.cmb_databases.addItems(keys)
+        self.dlg.cmb_databases.addItems(databasenames)
 
 
         # show the dialog
         self.dlg.show()
-        
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
-        if result:
+        
+
+    def get(self):
+        filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
             
-            filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
+        filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
             
-            filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
-            
-            selected_layer = self.dlg.cmb_layers.currentLayer()
-            print(selected_layer)
-            CU = self.dlg.cb_CU.isChecked()
-            CD = self.dlg.cb_CD.isChecked()
-            UU = self.dlg.cb_UU.isChecked()
-            ea = self.dlg.sb_strain.value()
-            print('Proeftypes: {}, {}, {} at {} strain'.format(CU, CD, UU, ea))
-            show_plot = self.dlg.cb_showPlot.isChecked()
-            print('show plot: {}'.format(show_plot))
-            output_location = self.dlg.fileWidget.filePath()
-            print('Output location: {}'.format(output_location))
-            output_name = self.dlg.le_outputName.text()
-            print(output_name)
-            
-            args = {'selected_layer' : selected_layer,
+        selected_layer = self.dlg.cmb_layers.currentLayer()
+        print(selected_layer)
+        CU = self.dlg.cb_CU.isChecked()
+        CD = self.dlg.cb_CD.isChecked()
+        UU = self.dlg.cb_UU.isChecked()
+        ea = self.dlg.sb_strain.value()
+        print('Proeftypes: {}, {}, {} at {} strain'.format(CU, CD, UU, ea))
+        show_plot = self.dlg.cb_showPlot.isChecked()
+        print('show plot: {}'.format(show_plot))
+        output_location = self.dlg.fileWidget.filePath()
+        print('Output location: {}'.format(output_location))
+        output_name = self.dlg.le_outputName.text()
+        print(output_name)
+        args = {'selected_layer' : selected_layer,
                 'CU' : CU, 'CD' : CD, 'UU' : UU,
                 'ea' : ea,
                 'show_plot' : show_plot,
                 'output_location' : output_location, 'output_name' : output_name
                 }
-            
-            if filter_on_height:
-                print('filteronheight checked')
-                maxH = self.dlg.sb_maxHeight.value()
-                minH = self.dlg.sb_minHeight.value()
-                args['maxH'] = maxH
-                args['minH'] = minH
-                print('max Height: {}, min Height {}'.format(maxH, minH))
-            if filter_on_volumetric_weight:
-                print('filteronweight checked')
-                maxVg = self.dlg.sb_maxVolumetricWeight.value()
-                minVg = self.dlg.sb_minVolumetricWeight.value()
-                args['maxVg'] = maxVg
-                args['minVg'] = minVg
-                print('max Vg: {}, min Vg {}'.format(maxVg, minVg))
-
+                
+        if filter_on_height:
+            print('filteronheight checked')
+            maxH = self.dlg.sb_maxHeight.value()
+            minH = self.dlg.sb_minHeight.value()
+            args['maxH'] = maxH
+            args['minH'] = minH
+            print('max Height: {}, min Height {}'.format(maxH, minH))
+        if filter_on_volumetric_weight:
+            print('filteronweight checked')
+            maxVg = self.dlg.sb_maxVolumetricWeight.value()
+            minVg = self.dlg.sb_minVolumetricWeight.value()
+            args['maxVg'] = maxVg
+            args['minVg'] = minVg
+            print('max Vg: {}, min Vg {}'.format(maxVg, minVg))
+        
+        settings = QSettings()
+        allkeys = settings.allKeys()
+        database = self.dlg.cmb_databases.currentText()
+        selected_databasekeys = [k for k in allkeys if database in k]
+        host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
+        port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
+        success, user, passwd = self.get_credentials(host, port, database)
+        if success:
+            qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
+            args['qb'] = qb
             print(args)
-
             self.qgis_frontend(**args)
+            self.dlg.close()
+        else:
+            self.iface.messageBar().pushMessage('Error','Username and/or password combination is incorrect.', level=Qgis.critical)
+            self.dlg.show()   
 
 
     def reset_ui(self):
@@ -281,10 +296,17 @@ class dbconnect:
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Extract')
 
-    def select_database(self):
-        pass
+    def get_credentials(self, host, port, database):
+        uri = QgsDataSourceUri()
+        # assign this information before you query the QgsCredentials data store
+        uri.setConnection(host, port, database, None, None)
+        connInfo = uri.connectionInfo()
+
+        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
+        return success, user, passwd
 
     def qgis_frontend(self,
+        qb,
         selected_layer,
         CU, CD, UU, ea,
         show_plot,

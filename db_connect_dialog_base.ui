@@ -467,7 +467,7 @@
     <item>
      <widget class="QgsFileWidget" name="fileWidget">
       <property name="defaultRoot">
-       <string>C:\Users\Desktop</string>
+       <string>C:\Users\Kevin Schuurman\Desktop\Test</string>
       </property>
      </widget>
     </item>
@@ -497,7 +497,7 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <property name="standardButtons">
-       <set>QDialogButtonBox::Close|QDialogButtonBox::Ok|QDialogButtonBox::Reset</set>
+       <set>QDialogButtonBox::Close|QDialogButtonBox::Open|QDialogButtonBox::Reset</set>
       </property>
       <property name="centerButtons">
        <bool>false</bool>
