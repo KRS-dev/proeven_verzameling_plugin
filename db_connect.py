@@ -206,10 +206,9 @@ class dbconnect:
         settings = QSettings()
         allkeys = settings.allKeys()
         databasekeys = [k for k in allkeys if 'database' in k]
-        #databasekeys = [k.split('/') for k in databasekeys]
-        print(databasekeys)
+        keys = [settings.value(k) for k in databasekeys]
         self.dlg.cmb_databases.clear()
-        self.dlg.cmb_databases.addItems(databasekeys)
+        self.dlg.cmb_databases.addItems(keys)
 
 
         # show the dialog
