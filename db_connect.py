@@ -227,18 +227,13 @@ class dbconnect:
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
             
         selected_layer = self.dlg.cmb_layers.currentLayer()
-        print(selected_layer)
         CU = self.dlg.cb_CU.isChecked()
         CD = self.dlg.cb_CD.isChecked()
         UU = self.dlg.cb_UU.isChecked()
         ea = self.dlg.sb_strain.value()
-        print('Proeftypes: {}, {}, {} at {} strain'.format(CU, CD, UU, ea))
         show_plot = self.dlg.cb_showPlot.isChecked()
-        print('show plot: {}'.format(show_plot))
         output_location = self.dlg.fileWidget.filePath()
-        print('Output location: {}'.format(output_location))
         output_name = self.dlg.le_outputName.text()
-        print(output_name)
         args = {'selected_layer' : selected_layer,
                 'CU' : CU, 'CD' : CD, 'UU' : UU,
                 'ea' : ea,
@@ -247,19 +242,15 @@ class dbconnect:
                 }
                 
         if filter_on_height:
-            print('filteronheight checked')
             maxH = self.dlg.sb_maxHeight.value()
             minH = self.dlg.sb_minHeight.value()
             args['maxH'] = maxH
             args['minH'] = minH
-            print('max Height: {}, min Height {}'.format(maxH, minH))
         if filter_on_volumetric_weight:
-            print('filteronweight checked')
             maxVg = self.dlg.sb_maxVolumetricWeight.value()
             minVg = self.dlg.sb_minVolumetricWeight.value()
             args['maxVg'] = maxVg
             args['minVg'] = minVg
-            print('max Vg: {}, min Vg {}'.format(maxVg, minVg))
         
         settings = QSettings()
         allkeys = settings.allKeys()
@@ -267,15 +258,17 @@ class dbconnect:
         selected_databasekeys = [k for k in allkeys if database in k]
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
+        sslmode = settings.value([k for k in selected_databasekeys if 'sslmode' in k][0])
         success, user, passwd = self.get_credentials(host, port, database)
+        print(success)
         if success:
             qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
             args['qb'] = qb
-            print(args)
+            #print(args)
             self.qgis_frontend(**args)
             self.dlg.close()
         else:
-            self.iface.messageBar().pushMessage('Error','Username and/or password combination is incorrect.', level=Qgis.critical)
+            self.iface.messageBar().pushMessage('Error','Username and/or password combination is incorrect.', level=Qgis.Critical)
             self.dlg.show()   
 
 
@@ -299,10 +292,11 @@ class dbconnect:
     def get_credentials(self, host, port, database):
         uri = QgsDataSourceUri()
         # assign this information before you query the QgsCredentials data store
-        uri.setConnection(host, port, database, None, None)
+        uri.setConnection(str(host), str(port), str(database),  None, None)
         connInfo = uri.connectionInfo()
 
-        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
+        success, user, passwd = QgsCredentials.instance().get(connInfo, None, None)
+        print(success)
         return success, user, passwd
 
     def qgis_frontend(self,
