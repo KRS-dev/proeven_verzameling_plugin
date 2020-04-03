@@ -193,8 +193,8 @@ class dbconnect:
         if self.first_start == True:
             self.first_start = False
             self.dlg = dbconnectDialog()
-            self.reset_ui() 
-        
+            self.reset_ui()
+                
         #Initialize QGIS filewidget to select a directory
         self.dlg.fileWidget.setStorageMode(1)
         #Signalling the reset button 
@@ -305,30 +305,31 @@ class dbconnect:
         loc_ids = qb.get_loc_ids(selected_layer)
         # Get all meetpunten related to these loc_ids
         df_meetp = qb.get_meetpunten(loc_ids)
-        df_geod = qb.get_geo_dossiers(df_meetp.gds_id)
+        df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
         df_gm = qb.get_geotech_monsters(loc_ids)
         df_gm_filt_on_z = qb.select_on_z_coord(df_gm, heights[0], heights[1])
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
 
-        df_sdp = qb.get_sdp(df_gm_filt_on_z.gtm_id)
+        df_sdp = qb.get_sdp(df_gm_filt_on_z.GTM_ID)
         if df_sdp is not None:
-            df_sdp_result = qb.get_sdp_result(df_gm.gtm_id)
+            df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
             df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
 
-        df_trx = qb.get_trx(df_gm_filt_on_z.gtm_id, proef_type = proef_types)
-        df_trx = qb.select_on_vg(df_trx, volume_gewicht_selectie[0], volume_gewicht_selectie[1])
+        df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
+        if df_trx is not None:
+            df_trx = qb.select_on_vg(df_trx, volume_gewicht_selectie[0], volume_gewicht_selectie[1])
         if df_trx is not None:
             # Get all TRX results, TRX deelproeven and TRX deelproef results
-            df_trx_results = qb.get_trx_result(df_trx.gtm_id)
-            df_trx_dlp = qb.get_trx_dlp(df_trx.gtm_id)
-            df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.gtm_id)
+            df_trx_results = qb.get_trx_result(df_trx.GTM_ID)
+            df_trx_dlp = qb.get_trx_dlp(df_trx.GTM_ID)
+            df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.GTM_ID)
             df_dict.update({'BIS_TRX_Proeven':df_trx, 'BIS_TRX_Results':df_trx_results, 'BIS_TRX_DLP':df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
             
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
                 ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                minvg, maxvg = min(df_trx.volumegewicht_nat), max(df_trx.volumegewicht_nat)
+                minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
                 N = round(len(df_trx.index)/5) + 1
                 cutoff = 1 # The interval cant be lower than 1 kn/m3
                 if (maxvg-minvg)/N > cutoff:
@@ -350,7 +351,7 @@ class dbconnect:
                     avg_list = []
                     for vg_max, vg_min in zip(Vgmax, Vgmin):
                         # Make a selection for this volumetric weight interval
-                        gtm_ids = qb.select_on_vg(df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['gtm_id']
+                        gtm_ids = qb.select_on_vg(df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
                         if len(gtm_ids) > 0:
                             # Create a tag for this particular volumetric weight interval
                             key = 'Vg: ' + str(round(vg_min, 1)) + '-' + str(round(vg_max, 1)) + ' kN/m3'
@@ -365,7 +366,7 @@ class dbconnect:
                             # Calculate the averages and standard deviation of fi and coh for different strain types and add them to a dataframe list
                             mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
                             df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['min(Vg)', 'max(Vg)', 'mean(fi)', 'mean(coh)', 'std(fi)', 'std(coh)', 'N'])
+                                columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
                             avg_list.append(df_avg_temp)
                             # Calculate the least squares estimate of the S en T and add them to a dataframe list
                             fi, coh, E, E_per_n, eps, N = qb.get_least_squares(
@@ -375,7 +376,7 @@ class dbconnect:
                                 show_plot=show_plot
                                 )
                             df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],\
-                                columns=['min(Vg)', 'max(Vg)', 'fi', 'coh', 'Abs. Sq. Err.', 'Abs. Sq. Err./N', 'Mean Rel. Err. %', 'N'])
+                                columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
                             ls_list.append(df_lst_temp)
                     if len(ls_list) > 0:
                         df_ls_stat = pd.concat(ls_list)
@@ -389,13 +390,13 @@ class dbconnect:
                 df_bbn_stat_dict = {}
                 for ea in rek_selectie:
                     bbn_list = []
-                    for bbn_code in pd.unique(df_trx.bbn_kode):
-                        gtm_ids = df_trx[df_trx.bbn_kode == bbn_code].gtm_id
+                    for bbn_code in pd.unique(df_trx.BBN_KODE):
+                        gtm_ids = df_trx[df_trx.BBN_KODE == bbn_code].GTM_ID
                         if len(gtm_ids > 0):
                             df_trx_results_temp = qb.get_trx_result(gtm_ids)
                             mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
                             bbn_list.append(pd.DataFrame(index = [bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['mean(fi)', 'mean(coh)', 'std(fi)', 'std(coh)', 'N']))
+                                columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
                     if len(bbn_list) > 0:        
                         df_bbn_stat = pd.concat(bbn_list)
                         df_bbn_stat.index.name = 'ea: ' + str(ea) +'%'
