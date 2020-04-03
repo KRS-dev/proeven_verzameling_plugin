@@ -191,25 +191,25 @@ class dbconnect:
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
+            print('run')
             self.first_start = False
             self.dlg = dbconnectDialog()
-            self.reset_ui() 
+            self.reset_ui()
+            #Initialize QGIS filewidget to select a directory
+            self.dlg.fileWidget.setStorageMode(1)
+            #Signalling the reset button 
+            self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
+            self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get) 
+            # Strain slider and spinbox connection
+            self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
+            self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
+            #self.dlg.tb_newConnection.clicked.connect(self.new_connection)
         
-        #Initialize QGIS filewidget to select a directory
-        self.dlg.fileWidget.setStorageMode(1)
-        #Signalling the reset button 
-        self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
-        self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get)
-        # Strain slider and spinbox connection
-        self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
-        self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
-        #self.dlg.tb_newConnection.clicked.connect(self.new_connection)
+        
         settings = QSettings()
         allkeys = settings.allKeys()
-        databasekeys = {}
         databases = [k for k in allkeys if 'database' in k]
         databasenames = [settings.value(k) for k in databases]
-        print(databasekeys)
         self.dlg.cmb_databases.clear()
         self.dlg.cmb_databases.addItems(databasenames)
 
@@ -219,6 +219,8 @@ class dbconnect:
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
+        if result:
+            pass
         
 
     def get(self):
@@ -262,14 +264,13 @@ class dbconnect:
         success, user, passwd = self.get_credentials(host, port, database)
         print(success)
         if success:
+            success = None
             qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
             args['qb'] = qb
-            #print(args)
             self.qgis_frontend(**args)
-            self.dlg.close()
-        else:
-            self.iface.messageBar().pushMessage('Error','Username and/or password combination is incorrect.', level=Qgis.Critical)
-            self.dlg.show()   
+        elif ~success:
+            success = None
+            #self.iface.messageBar().pushMessage('Error','aUsername and/or password combination is incorrect.', level=Qgis.Critical) 
 
 
     def reset_ui(self):
@@ -295,8 +296,8 @@ class dbconnect:
         uri.setConnection(str(host), str(port), str(database),  None, None)
         connInfo = uri.connectionInfo()
 
-        success, user, passwd = QgsCredentials.instance().get(connInfo, None, None)
-        print(success)
+        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
+        
         return success, user, passwd
 
     def qgis_frontend(self,
