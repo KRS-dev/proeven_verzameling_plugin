@@ -7,8 +7,8 @@ Summary: Base functions for qgis_frontend.py, Querying the data from the proeven
 '''
 import pandas as pd
 import numpy as np
-import psycopg2 as psy
-#import cx_Oracle as cora 
+#import psycopg2 as psy
+import cx_Oracle as cora 
 #or
 #import pyodbc as cora
 import matplotlib.pyplot as plt
@@ -17,24 +17,26 @@ import matplotlib.offsetbox as offsetbox
 # Database Connection
 def fetch (query, data):
     ## Using a PostgreSQL database
+    '''
     with psy.connect(
         host = "localhost",
         database = "bis",
-        user = "postgres",
-        password = "admin"
+        user = "",
+        password = ""
         ) as dbcon:
+    '''
     ## Using an Oracle database:
-        '''
+
+    bis_dsn = cora.makedsn('sdrprod.rotterdam.local', 1521, service_name = 'PSBRBIS.ROTTERDAM.LOCAL')
     with cora.connect(
         user = "",
         password = "",
-        dsn = ""*
+        dsn = bis_dsn
             ) as dbcon:
         # *Can be a: 
         # 1. Oracle Easy Connect string
         # 2. Oracle Net Connect Descriptor string
         # 3. Net Service Name mapping to connect description
-        '''
 
         cur = dbcon.cursor()
         cur.execute(query, data)
@@ -69,18 +71,19 @@ def get_meetpunten(loc_ids):
         if len(loc_ids) > 0:
             if(all(isinstance(x, int) for x in loc_ids)):
                 values = tuple(loc_ids)
+                bindValues = [':' + str(i+1) for i in range(len(values))]
                 query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
                     + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
-                    + 'WHERE bis_graf_loc_aanduidingen.loc_id IN %s'
-                fetched, description = fetch(query, (values,))
+                    + 'WHERE bis_graf_loc_aanduidingen.loc_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
 
                 if (0 < len(fetched)):
                     meetp_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     meetp_df.columns = colnames
-                    meetp_df.gds_id = meetp_df.gds_id.fillna(0)
-                    meetp_df.gds_id = pd.to_numeric(
-                        meetp_df.gds_id, downcast='integer')
+                    meetp_df.GDS_ID = meetp_df.GDS_ID.fillna(0)
+                    meetp_df.GDS_ID = pd.to_numeric(
+                        meetp_df.GDS_ID, downcast='integer')
                     return meetp_df
                 else:
                     raise ValueError(
@@ -98,8 +101,9 @@ def get_geo_dossiers(gds_ids):
         if len(gds_ids) > 0:
             if(all(isinstance(x, int) for x in gds_ids)):
                 values = tuple( gds_ids )
-                query = 'SELECT * FROM bis_geo_dossiers WHERE gds_id IN %s'
-                fetched, description = fetch(query, (values,))
+                bindValues = [':' + str(i+1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_geo_dossiers WHERE gds_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
                 if (0 < len(fetched)):
                     geod_df = pd.DataFrame(fetched)
                     colnames = [ desc[0] for desc in description ]
@@ -121,17 +125,18 @@ def get_geotech_monsters(bor_ids):
         if len(bor_ids) > 0:
             if(all(isinstance(x, (int)) for x in bor_ids)):
                 values = tuple(bor_ids)
-                query = 'SELECT * FROM bis_geotech_monsters WHERE bor_id IN %s'
-                fetched, description = fetch(query, (values,))
+                bindValues = [':' + str(i+1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_geotech_monsters WHERE bor_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
                 if(len(fetched) > 0):
                     g_mon_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     g_mon_df.columns = colnames
-                    g_mon_df['z_coordinaat_laag'] = pd.to_numeric(g_mon_df['z_coordinaat_laag'])
+                    g_mon_df['Z_COORDINAAT_LAAG'] = pd.to_numeric(g_mon_df['Z_COORDINAAT_LAAG'])
                     return g_mon_df
                 else:
-                    raise ValueError('These selected boring(en): ' + str(values) + \
-                    ' do not contain any triaxiaal proeven.')
+                    print('These selected boring(en): ' + str(values) + \
+                    ' do not contain any GEO_Monsters.')
             else:
                 raise TypeError('not all inputs are integers')
         else:
@@ -142,28 +147,36 @@ def get_geotech_monsters(bor_ids):
 # Filter on height of the Geotechnical monsters        
 def select_on_z_coord(g_mon_df, zmax, zmin):
     if isinstance(g_mon_df, pd.DataFrame):
-        new_g_mon_df = g_mon_df[(zmax > g_mon_df.z_coordinaat_laag) & (g_mon_df.z_coordinaat_laag > zmin)]
-        return new_g_mon_df
+        new_g_mon_df = g_mon_df[(zmax > g_mon_df.Z_COORDINAAT_LAAG) & (g_mon_df.Z_COORDINAAT_LAAG > zmin)]
+        if new_g_mon_df is not None:
+            return new_g_mon_df
+        else:
+            print('Between ' + zmax + ' and ' + zmin + 'm there are no GEO_Monsters found.')
     else:
          raise TypeError('No pandas dataframe was supplied')
 
 # Querying TRX_proeven
 def get_trx(gtm_ids, proef_type = ('CD')):
     if isinstance(gtm_ids, (list, tuple, pd.Series)):
-        if all(any(x == i for i in ('CU', 'CD', 'UU')) for x in proef_type):
+        if all(any(x == i for i in ('CU','CD','UU')) for x in proef_type):
             if len(gtm_ids) > 0:
                 if all(isinstance( x, ( int )) for x in gtm_ids):
-                    values = tuple(gtm_ids)
-                    proef_type = tuple(proef_type)
-                    query = 'SELECT * FROM bis_trx_proeven WHERE proef_type IN %s AND gtm_id IN %s'
-                    fetched, description = fetch(query, (proef_type, values))
+                    values = list(gtm_ids)
+                    bindValues = [':' + str(i+1) for i in range(len(values))]
+                    proef_type = list(proef_type)
+                    bindProef = [':p' + str(i + 1) for i in range(len(proef_type))]
+                    bindAll = bindValues + bindProef
+                    values = values + proef_type
+                    bindDict = dict(zip(bindAll, values))
+                    query = 'SELECT * FROM bis_trx_proeven WHERE proef_type IN ({}) AND gtm_id IN ({})'.format(','.join(bindProef), ','.join(bindValues))
+                    fetched, description = fetch(query, bindDict)
                     if(len(fetched) > 0):
                         trx_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_df.columns = colnames
-                        trx_df[['volumegewicht_droog','volumegewicht_nat','watergehalte','terreinspanning','bezwijksnelheid']] = \
-                        trx_df[['volumegewicht_droog','volumegewicht_nat','watergehalte','terreinspanning','bezwijksnelheid']].apply(pd.to_numeric)
-                        trx_df.volumegewicht_nat = trx_df.volumegewicht_nat.astype(float)
+                        trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE','TEREINSPANNING','BEZWIJKSNELHEID']] = \
+                        trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE','TEREINSPANNING','BEZWIJKSNELHEID']].apply(pd.to_numeric)
+                        trx_df.VOLUMEGEWICHT_NAT = trx_df.VOLUMEGEWICHT_NAT.astype(float)
                         return trx_df
                     else:
                         print('These selected boring(en): ' + str(values) + \
@@ -173,22 +186,25 @@ def get_trx(gtm_ids, proef_type = ('CD')):
             else:
                 raise ValueError('No gtm_ids were supplied.')
         else:
-            raise TypeError('Only CU, CD and UU or a combination are allowed as proef_type')
+            raise TypeError('Only CU, CD and UU or a combination of the types mentioned are allowed as proef_type')
     else:
         raise TypeError('Input is not a list or tuple')
 
 # Filter on Volumetric weight      
-def select_on_vg(trx_df, Vg_max = 20, Vg_min = 17, soort ='nat'):
+def select_on_vg(trx_df, Vg_max=20, Vg_min=17, soort='nat'):
     #Volume gewicht y in kN/m3
     if isinstance(trx_df, pd.DataFrame):
         if soort == 'nat':
-            new_trx_df = trx_df[(Vg_max >= trx_df.volumegewicht_nat) & (trx_df.volumegewicht_nat >= Vg_min)]
+            new_trx_df = trx_df[(Vg_max >= trx_df.VOLUMEGEWICHT_NAT) & (trx_df.VOLUMEGEWICHT_NAT >= Vg_min)]
         elif soort == 'droog':
-            new_trx_df = trx_df[(Vg_max >= trx_df.volumegewicht_droog) & (trx_df.volumegewicht_droog >= Vg_min)]
+            new_trx_df = trx_df[(Vg_max >= trx_df.VOLUMEGEWICHT_DROOG) & (trx_df.VOLUMEGEWICHT_DROOG >= Vg_min)]
         else:
             raise TypeError('\'' + soort + '\' is not allowed as argument for soort,\
                  only \'nat\' and \'droog\' are allowed.')
-        return new_trx_df
+        if new_trx_df is not None:
+            return new_trx_df
+        else:
+            print('Between: \'' + Vg_max + '\' and \'' + Vg_min + '\' kg/m3 there are no GEO_Monsters found')
     else:
         raise TypeError('No pandas dataframe was supplied')
 
@@ -197,14 +213,15 @@ def get_trx_result(gtm_ids):
     if isinstance(gtm_ids, (list, tuple, pd.Series)):  
         if len(gtm_ids) > 0:    
             if all(isinstance(x, (int)) for x in gtm_ids):
-                values = tuple( gtm_ids )
-                query = 'SELECT * FROM bis_trx_proef_result WHERE gtm_id IN %s' 
-                fetched, description = fetch(query, (values,))
+                values = list(gtm_ids)
+                bindValues = [':' + str(i+1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_trx_proef_result WHERE gtm_id IN ({})'.format(','.join(bindValues)) 
+                fetched, description = fetch(query, values)
                 if( len( fetched ) > 0 ):
                     trx_result_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     trx_result_df.columns = colnames
-                    trx_result_df[['ea','coh','fi']] = trx_result_df[['ea','coh','fi']].apply(pd.to_numeric)
+                    trx_result_df[['EA','COH','FI']] = trx_result_df[['EA','COH','FI']].apply(pd.to_numeric)
                     return trx_result_df
                 else:
                     print('These selected boring(en): ' + str(values) + \
@@ -219,16 +236,17 @@ def get_trx_result(gtm_ids):
 # Querying TRX_deelproeven
 def get_trx_dlp(gtm_ids):
     if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):   
-        if len( gtm_ids ) > 0: 
+        if len(gtm_ids) > 0: 
             if all(isinstance(x, (int)) for x in gtm_ids):
-                values = tuple( gtm_ids )
-                query = 'SELECT * FROM bis_trx_dlp WHERE gtm_id IN %s' 
-                fetched, description = fetch(query, (values,))
+                values = list(gtm_ids)
+                bindValues = [':' + str(i + 1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_trx_dlp WHERE gtm_id IN ({})'.format(','.join(bindValues)) 
+                fetched, description = fetch(query, values)
                 if( len( fetched ) > 0 ):
                     trx_dlp = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     trx_dlp.columns = colnames
-                    trx_dlp.loc[:,'eps50':] = trx_dlp.loc[:,'eps50':].apply(pd.to_numeric)
+                    trx_dlp.loc[:,'EPS50':] = trx_dlp.loc[:,'EPS50':].apply(pd.to_numeric)
                     return trx_dlp
                 else:
                     print('These selected geomonsters: ' + str(values) + \
@@ -241,19 +259,20 @@ def get_trx_dlp(gtm_ids):
          raise TypeError('Input is not a list or tuple')   
 
 # Querying TRX_dlp_results
-def get_trx_dlp_result( gtm_ids ):
-    if isinstance(gtm_ids, ( list, tuple, pd.Series ) ): 
-        if len( gtm_ids ) > 0:
+def get_trx_dlp_result(gtm_ids):
+    if isinstance(gtm_ids, (list, tuple, pd.Series)): 
+        if len(gtm_ids) > 0:
             if all(isinstance(x, (int)) for x in gtm_ids):
-                values = tuple( gtm_ids )
-                query = 'SELECT * FROM bis_trx_dlp_result WHERE gtm_id IN %s' 
-                fetched, description = fetch(query, (values,))
+                values = list(gtm_ids)
+                bindValues = [':' + str(i + 1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_trx_dlp_result WHERE gtm_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
                 if( len( fetched ) > 0 ):
                     trx_dlp_result = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     trx_dlp_result.columns = colnames
-                    trx_dlp_result.rename(columns={'tpr_ea':'ea'},inplace=True)
-                    trx_dlp_result.loc[:,'ea':] = trx_dlp_result.loc[:,'ea':].apply(pd.to_numeric)
+                    trx_dlp_result.rename(columns={'TPR_EA':'EA'},inplace=True)
+                    trx_dlp_result.loc[:,'EA':] = trx_dlp_result.loc[:,'EA':].apply(pd.to_numeric)
                     return trx_dlp_result
                 else:
                     print('These selected boring(en): ' + str(values) + \
@@ -266,21 +285,21 @@ def get_trx_dlp_result( gtm_ids ):
          raise TypeError('Input is not a list or tuple')   
 
 # Filter on ea/strain        
-def select_on_ea( trx_result, ea = 2 ):
+def select_on_ea(trx_result, ea = 2):
      if isinstance(trx_result, pd.DataFrame): 
-         new_trx_result_ea = trx_result[ ea == trx_result.ea ]
+         new_trx_result_ea = trx_result[ea == trx_result.EA]
          return new_trx_result_ea
      else:
          raise TypeError('No pandas dataframe was supplied')
 
 # Calculating averages and standard deviations on TRX_results
-def get_average_per_ea( df_trx_result, ea = 5):
-    if isinstance( df_trx_result, pd.DataFrame ):
+def get_average_per_ea(df_trx_result, ea = 5):
+    if isinstance(df_trx_result, pd.DataFrame):
         df_trx_temp = select_on_ea(df_trx_result, ea)
-        mean_coh = round( np.mean( df_trx_temp['coh'] ), 1 )
-        mean_fi = round( np.mean( df_trx_temp['fi'] ), 1 )
-        std_coh = round( np.std( df_trx_temp['coh'] ),1 )
-        std_fi = round( np.std( df_trx_temp['fi'] ), 1 )
+        mean_coh = round(np.mean( df_trx_temp['COH']), 1)
+        mean_fi = round(np.mean( df_trx_temp['FI']), 1)
+        std_coh = round(np.std( df_trx_temp['COH']),1)
+        std_fi = round(np.std( df_trx_temp['FI']), 1)
         N = int(len(df_trx_temp.index))
         return mean_fi,std_fi,mean_coh,std_coh,N
     else:
@@ -291,10 +310,11 @@ def get_least_squares(
     df_trx_dlp_result, 
     plot_name = 'Lst_Sqrs_name', 
     ea = 2, 
-    show_plot = True
+    show_plot = True, 
+    save_plot = False
     ):
     df = select_on_ea( df_trx_dlp_result, ea)
-    data_full = (df.p, df.q)
+    data_full = (df.P, df.Q)
     ### Begin Least Squares fitting van een 'linear regression'
     x, y = data_full
     N = len(x)
@@ -320,9 +340,9 @@ def get_least_squares(
     ### Einde Least Squares fitting
 
     
-    if show_plot:
-        dlp1, dlp2, dlp3 = df[(df.deelproef_nummer == 1)], df[(df.deelproef_nummer == 2)], df[(df.deelproef_nummer == 3)]
-        data_colors = ((dlp1.p, dlp1.q, dlp1.gtm_id), (dlp2.p, dlp2.q, dlp2.gtm_id), (dlp3.p, dlp3.q, dlp3.gtm_id))
+    if show_plot or save_plot:
+        dlp1, dlp2, dlp3 = df[(df.TDP_DEELPROEF_NUMMER == 1)], df[(df.TDP_DEELPROEF_NUMMER == 2)], df[(df.TDP_DEELPROEF_NUMMER == 3)]
+        data_colors = ((dlp1.P, dlp1.Q, dlp1.GTM_ID), (dlp2.P, dlp2.Q, dlp2.GTM_ID), (dlp3.P, dlp3.Q, dlp3.GTM_ID))
         colors = ('red', 'green', 'blue')
         dlp_label = ('dlp 1', 'dlp 2', 'dlp 3')
 
@@ -382,6 +402,8 @@ def get_least_squares(
         plt.tight_layout()
         if show_plot:
             plt.show()
+        if save_plot:
+            pass
     return round(np.degrees(fi),1), round(coh,1), round(E), round(E_per_n,1), round(eps*100,1), N
 
 # Querying compression tests\samendrukkingsproeven
@@ -389,15 +411,16 @@ def get_sdp( gtm_ids ):
     if isinstance(gtm_ids, ( list, tuple, pd.Series ) ): 
         if len( gtm_ids ) > 0:
             if all(isinstance(x, (int)) for x in gtm_ids):
-                values = tuple( gtm_ids )
-                query = 'SELECT * FROM bis_sdp WHERE gtm_id IN %s'
-                fetched, description = fetch(query, (values,))
+                values = list( gtm_ids )
+                bindValues = [':' + str(i + 1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_sdp WHERE gtm_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
                 if( len( fetched ) > 0 ):
                     sdp_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     sdp_df.columns = colnames
-                    sdp_df.loc[:,'volumegewicht_droog':] = \
-                        sdp_df.loc[:,'volumegewicht_droog':].apply(pd.to_numeric)
+                    sdp_df.loc[:,'VOLUMEGEWICHT_DROOG':] = \
+                        sdp_df.loc[:,'VOLUMEGEWICHT_DROOG':].apply(pd.to_numeric)
                     return sdp_df
                 else:
                     print('These selected boring(en): ' + str(values) + \
@@ -414,15 +437,16 @@ def get_sdp_result( gtm_ids ):
     if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):
         if len( gtm_ids ) > 0: 
             if all(isinstance(x, (int)) for x in gtm_ids):
-                values = tuple( gtm_ids )
-                query = 'SELECT * FROM bis_sdp_resultaten WHERE gtm_id IN %s'
-                fetched, description = fetch(query, (values,))
+                values = list( gtm_ids )
+                bindValues = [':' + str(i + 1) for i in range(len(values))]
+                query = 'SELECT * FROM bis_sdp_resultaten WHERE gtm_id IN ({})'.format(','.join(bindValues))
+                fetched, description = fetch(query, values)
                 if( len( fetched ) > 0 ):
                     sdp_result_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     sdp_result_df.columns = colnames
-                    sdp_result_df.loc[:,'load':] = \
-                        sdp_result_df.loc[:,'load':].apply(pd.to_numeric)
+                    sdp_result_df.loc[:,'LOAD':] = \
+                        sdp_result_df.loc[:,'LOAD':].apply(pd.to_numeric)
                     return sdp_result_df
                 else:
                     print('These selected boring(en): ' + str(values) + \
@@ -440,19 +464,24 @@ def join_trx_with_trx_results( gtm_ids, proef_type = 'CD' ):
             if all( isinstance( x, ( int )) for x in gtm_ids ):
 
                 values = tuple(gtm_ids)
-                #values_str = '(' + ','.join(str(i) for i in values).strip(',') + ')'
+                bindValues = [':' + str(i + 1) for i in range(len(values))]
+                proef_type = list(proef_type)
+                bindProef =[':p' + str(i + 1) for i in range(len(proef_type))]
+                bindAll = bindValues + bindProef
+                values = values + proef_type
+                bindDict = dict(zip(bindAll, values))
                 query = 'SELECT bis_trx_proeven.gtm_id, volumegewicht_droog, volumegewicht_nat, ' \
                     + 'watergehalte, terreinspanning, bezwijksnelheid, trx_result.trx_volgnr, ea, '\
                     + 'coh, fi FROM bis_trx_proeven ' \
                     + 'INNER JOIN bis_trx_proef_result ON bis_trx_proeven.gtm_id = bis_trx_proef_result.gtm_id '\
                     + 'AND bis_trx_proeven.trx_volgnr = bis_trx_proef_result.trx_volgnr '\
-                    + 'WHERE proef_type = %s AND bis_trx_proeven.gtm_id IN %s'
-                fetched, description = fetch(query, (proef_type, values))
+                    + 'WHERE proef_type = ({}) AND bis_trx_proeven.gtm_id IN ({})'.format(','.join(bindProef), ','.join(bindValues))
+                fetched, description = fetch(query, bindDict)
                 if( len( fetched ) > 0 ):
                     trx_df = pd.DataFrame(fetched)
                     colnames = [desc[0] for desc in description]
                     trx_df.columns = colnames
-                    trx_df.volumegewicht_nat = trx_df.volumegewicht_nat.astype(float)
+                    trx_df.VOLUMEGEWICHT_NAT = trx_df.VOLUMEGEWICHT_NAT.astype(float)
                     return trx_df
                 else:
                     raise ValueError('These selected boring(en): ' + str(values) + ' do not contain any trx + trx_result.')
