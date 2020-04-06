@@ -265,7 +265,6 @@ class dbconnect:
         selected_databasekeys = [k for k in allkeys if databasekey in k]
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
-        sslmode = settings.value([k for k in selected_databasekeys if 'sslmode' in k][0])
         
         suc, user, passwd, qb = self.get_credentials(host, port, database)
         while suc == 'false':
