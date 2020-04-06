@@ -7,8 +7,8 @@ Summary: Base functions for qgis_frontend.py, Querying the data from the proeven
 '''
 import pandas as pd
 import numpy as np
-import psycopg2 as psy
-#import cx_Oracle as cora 
+#import psycopg2 as psy
+import cx_Oracle as cora 
 #or
 #import pyodbc as cora
 import matplotlib.pyplot as plt
