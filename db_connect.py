@@ -295,6 +295,7 @@ class dbconnect:
             try:
                 qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
                 qb.fetch('SELECT 1', None)
+                print('password correct')
                 return user, passwd, qb
             except psycopg2.OperationalError:
                 self.get_credentials(host, port, database, message="FATAL Error: Username or Password is incorrect.")
