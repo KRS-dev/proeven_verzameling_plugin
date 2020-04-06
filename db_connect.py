@@ -191,7 +191,6 @@ class dbconnect:
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
-            print('run')
             self.first_start = False
             self.dlg = dbconnectDialog()
             self.reset_ui()
@@ -296,6 +295,7 @@ class dbconnect:
         connInfo = uri.connectionInfo()
         
         (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None, message)
+        qb = None
         if success:
             try:
                 qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
