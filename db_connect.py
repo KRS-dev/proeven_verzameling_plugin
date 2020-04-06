@@ -284,10 +284,10 @@ class dbconnect:
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Extract')
 
-    def get_credentials(self, host, port, database, message = None):
+    def get_credentials(self, host, port, database, message=None):
         uri = QgsDataSourceUri()
         # assign this information before you query the QgsCredentials data store
-        uri.setConnection(host, port, database,  None, None)
+        uri.setConnection(host, port, database, None, None)
         connInfo = uri.connectionInfo()
         
         (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
@@ -297,7 +297,7 @@ class dbconnect:
                 qb.fetch('SELECT 1', None)
                 return user, passwd, qb
             except psycopg2.OperationalError:
-                self.get_credentials(host, port, database, "FATAL Error: Username or Password is incorrect.")
+                self.get_credentials(host, port, database, message="FATAL Error: Username or Password is incorrect.")
 
 
 
