@@ -452,18 +452,18 @@ class dbconnect:
                 
             if df_trx is not None:
                 # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
-                if df_vg_stat_dict is not None:
+                if df_vg_stat_dict:
                     row = 0
                     for key in df_vg_stat_dict:
                         df_vg_stat_dict[key].to_excel(writer, sheet_name='Simpele Vg stat.', startrow=row)
                         row = row + len(df_vg_stat_dict[key].index) + 2
                 # Repeat...
-                if df_lst_sqrs_dict is not None:
+                if df_lst_sqrs_dict:
                     row = 0
                     for key in df_lst_sqrs_dict:
                         df_lst_sqrs_dict[key].to_excel(writer, sheet_name='Least Squares Vg Stat.', startrow=row)
                         row = row + len(df_lst_sqrs_dict[key].index) + 2
-                if df_bbn_stat_dict is not None:
+                if df_bbn_stat_dict:
                     row = 0
                     for key in df_bbn_stat_dict:
                         df_bbn_stat_dict[key].to_excel(writer, sheet_name='bbn_kode Stat.', startrow=row)
