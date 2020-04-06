@@ -16,8 +16,9 @@ import matplotlib.offsetbox as offsetbox
 
 class qgis_backend:
 
-    def __init__(self, host, database, username, password):
+    def __init__(self, host, port, database, username, password):
         self.host = host
+        self.port = port
         self.database = database
         self.username = username
         self.password = password
@@ -37,9 +38,9 @@ class qgis_backend:
         ## Using an Oracle database:
         bis_dsn = cora.makedsn(self.host, self.port, self.database)
         with cora.connect(
-            user = self.username,
-            password = self.password,
-            dsn = bis_dsn
+            user=self.username,
+            password=self.password,
+            dsn=bis_dsn
                 ) as dbcon:
             # *Can be a: 
             # 1. Oracle Easy Connect string

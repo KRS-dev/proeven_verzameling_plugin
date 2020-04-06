@@ -303,7 +303,7 @@ class dbconnect:
         qb = None
         if success:
             try:
-                qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
+                qb = qgis_backend.qgis_backend(host=host, port=port database=database, username=user, password=passwd)
                 qb.fetch('SELECT 1', None)
                 print('password correct')
                 return 'true', user, passwd, qb
