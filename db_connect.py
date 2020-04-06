@@ -261,10 +261,15 @@ class dbconnect:
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
         sslmode = settings.value([k for k in selected_databasekeys if 'sslmode' in k][0])
-        user, passwd, qb = self.get_credentials(host, port, database)
         
-        args['qb'] = qb
-        self.qgis_frontend(**args)
+        suc, user, passwd, qb = self.get_credentials(host, port, database)
+        while ~suc:
+            suc, user, passwd, qb = self.get_credentials(host, port, database, message='Username or Password incorrect')
+        if suc is None:
+            pass
+        elif suc:
+            args['qb'] = qb
+            self.qgis_frontend(**args)
 
 
     def reset_ui(self):
@@ -290,7 +295,7 @@ class dbconnect:
         uri.setConnection(host, port, database, None, None)
         connInfo = uri.connectionInfo()
         
-        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
+        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None, message)
         if success:
             try:
                 qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
@@ -298,7 +303,9 @@ class dbconnect:
                 print('password correct')
                 return user, passwd, qb
             except psycopg2.OperationalError:
-                self.get_credentials(host, port, database, message="FATAL Error: Username or Password is incorrect.")
+                return False, user, passwd, qb
+        else:
+            return None, user, passwd, qb
 
 
 
