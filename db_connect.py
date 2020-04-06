@@ -358,7 +358,9 @@ class dbconnect:
             df_trx_dlp = qb.get_trx_dlp(df_trx.gtm_id)
             df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.gtm_id)
             df_dict.update({'BIS_TRX_Proeven':df_trx, 'BIS_TRX_Results':df_trx_results, 'BIS_TRX_DLP':df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
-            
+            df_bbn_stat_dict = {}
+            df_vg_stat_dict = {}
+            df_lst_sqrs_dict = {}
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
                 ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
@@ -377,8 +379,7 @@ class dbconnect:
                 Vgmax = Vg_linspace[1:]
                 Vgmin = Vg_linspace[0:-1]
 
-                df_vg_stat_dict = {}
-                df_lst_sqrs_dict = {}
+                
                 for ea in rek_selectie:
                     ls_list = []
                     avg_list = []
@@ -420,7 +421,7 @@ class dbconnect:
                         df_avg_stat.index.name = 'ea: ' + str(ea) +'%'
                         df_vg_stat_dict.update({str(ea) + r'% rek gemiddelde fit':df_avg_stat})
 
-                df_bbn_stat_dict = {}
+                
                 for ea in rek_selectie:
                     bbn_list = []
                     for bbn_code in pd.unique(df_trx.bbn_kode):
