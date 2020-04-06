@@ -24,7 +24,7 @@
 import sys, os
 import pandas as pd
 import numpy as np
-import xlwt
+import xlwt, psycopg2
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
@@ -261,16 +261,10 @@ class dbconnect:
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
         sslmode = settings.value([k for k in selected_databasekeys if 'sslmode' in k][0])
-        success, user, passwd = self.get_credentials(host, port, database)
-        print(success)
-        if success:
-            success = None
-            qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
-            args['qb'] = qb
-            self.qgis_frontend(**args)
-        elif ~success:
-            success = None
-            #self.iface.messageBar().pushMessage('Error','aUsername and/or password combination is incorrect.', level=Qgis.Critical) 
+        user, passwd, qb = self.get_credentials(host, port, database)
+        
+        args['qb'] = qb
+        self.qgis_frontend(**args)
 
 
     def reset_ui(self):
@@ -290,18 +284,22 @@ class dbconnect:
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Extract')
 
-    def get_credentials(self, host, port, database):
+    def get_credentials(self, host, port, database, message = None):
         uri = QgsDataSourceUri()
         # assign this information before you query the QgsCredentials data store
-        uri.setConnection(str(host), str(port), str(database),  None, None)
+        uri.setConnection(host, port, database,  None, None)
         connInfo = uri.connectionInfo()
         
-
         (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
-        uri.setConnection(str(host), str(port), str(database),  user, passwd)
-        print(uri.connectionInfo())
-        
-        return success, user, passwd
+        if success:
+            try:
+                qb = qgis_backend.qgis_backend(host = host, database = database, username = user, password = passwd)
+                qb.fetch('SELECT 1', None)
+                return user, passwd, qb
+            except psycopg2.OperationalError:
+                self.get_credentials(host, port, database, "FATAL Error: Username or Password is incorrect.")
+
+
 
     def qgis_frontend(self,
         qb,
