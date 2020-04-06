@@ -36,8 +36,7 @@ class qgis_backend:
             ) as dbcon:
         '''
         ## Using an Oracle database:
-        bis_dsn = cora.makedsn(self.host, self.port, self.database)
-        print(bis_dsn)
+        bis_dsn = cora.makedsn(self.host, self.port, service_name=self.database)
         with cora.connect(
             user=self.username,
             password=self.password,
