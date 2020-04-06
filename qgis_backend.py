@@ -34,9 +34,10 @@ class qgis_backend:
             ) as dbcon:
         ## Using an Oracle database:
             '''
+        cora.makedsn(self.host, ..., ...)
         with cora.connect(
-            user = "",
-            password = "",
+            user = self.username,
+            password = self.password,
             dsn = ""*
                 ) as dbcon:
             # *Can be a: 
