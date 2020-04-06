@@ -463,7 +463,7 @@ class dbconnect:
                     for key in df_lst_sqrs_dict:
                         df_lst_sqrs_dict[key].to_excel(writer, sheet_name='Least Squares Vg Stat.', startrow=row)
                         row = row + len(df_lst_sqrs_dict[key].index) + 2
-                if df_bbn_stat_dict: is not None:
+                if df_bbn_stat_dict is not None:
                     row = 0
                     for key in df_bbn_stat_dict:
                         df_bbn_stat_dict[key].to_excel(writer, sheet_name='bbn_kode Stat.', startrow=row)
