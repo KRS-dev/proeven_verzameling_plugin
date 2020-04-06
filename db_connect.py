@@ -295,10 +295,11 @@ class dbconnect:
         # assign this information before you query the QgsCredentials data store
         uri.setConnection(str(host), str(port), str(database),  None, None)
         connInfo = uri.connectionInfo()
-        print(connInfo)
-        print(uri)
+        
 
         (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None)
+        uri.setConnection(str(host), str(port), str(database),  user, passwd)
+        print(uri.connectionInfo())
         
         return success, user, passwd
 
