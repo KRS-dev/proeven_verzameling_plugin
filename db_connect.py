@@ -194,14 +194,14 @@ class dbconnect:
             self.first_start = False
             self.dlg = dbconnectDialog()
             self.reset_ui()
-                
-        #Initialize QGIS filewidget to select a directory
-        self.dlg.fileWidget.setStorageMode(1)
-        #Signalling the reset button 
-        self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
-        # Strain slider and spinbox connection
-        self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
-        self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
+            #Initialize QGIS filewidget to select a directory
+            self.dlg.fileWidget.setStorageMode(1)
+            #Signalling the reset button 
+            self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
+            # Strain slider and spinbox connection
+            self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
+            self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)    
+        
 
 
 
