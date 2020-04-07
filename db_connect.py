@@ -24,7 +24,8 @@
 import sys, os
 import pandas as pd
 import numpy as np
-import xlwt, cx_Oracle
+import xlwt
+import cx_Oracle
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
