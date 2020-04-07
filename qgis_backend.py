@@ -477,7 +477,6 @@ class qgis_backend:
                     df_list = []
                     for chunk in chunks:
                         values = chunk
-                        values = list( gtm_ids )
                         bindValues = [':' + str(i + 1) for i in range(len(values))]
                         query = 'SELECT * FROM bis_sdp WHERE gtm_id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
