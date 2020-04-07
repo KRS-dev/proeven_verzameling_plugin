@@ -472,6 +472,7 @@ class qgis_backend:
         if isinstance(gtm_ids, (list, tuple, pd.Series)): 
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
+                    values = list(gtm_ids)
                     chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
                     df_list = []
                     for chunk in chunks:
