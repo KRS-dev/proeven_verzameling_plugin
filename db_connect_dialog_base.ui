@@ -34,7 +34,7 @@
      <verstretch>1</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,0,1,1,1,1,1,1,1,1,1,1,1,1,1">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1">
     <property name="spacing">
      <number>10</number>
     </property>
@@ -51,19 +51,26 @@
      <number>10</number>
     </property>
     <item>
+     <widget class="QLabel" name="label_10">
+      <property name="text">
+       <string>Selected Layer:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QgsMapLayerComboBox" name="cmb_layers"/>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_9">
+      <property name="text">
+       <string>Database:</string>
+      </property>
+     </widget>
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QComboBox" name="cmb_databases"/>
-      </item>
-      <item>
-       <widget class="QToolButton" name="tb_newConnection">
-        <property name="text">
-         <string>New Connection</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </item>

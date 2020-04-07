@@ -35,8 +35,8 @@ from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .db_connect_dialog import dbconnectDialog        
-from . import qgis_backend 
+from .db_connect_dialog import dbconnectDialog
+from . import qgis_backend
 
 class dbconnect:
     """QGIS Plugin Implementation."""
@@ -221,13 +221,10 @@ class dbconnect:
         # See if OK was pressed
         if result:
             pass
-        
 
     def get(self):
         filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
-            
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
-            
         selected_layer = self.dlg.cmb_layers.currentLayer()
         CU = self.dlg.cb_CU.isChecked()
         CD = self.dlg.cb_CD.isChecked()
@@ -268,9 +265,9 @@ class dbconnect:
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
         
-        suc, user, passwd, qb, message = self.get_credentials(host, port, database)
+        suc, qb, message = self.get_credentials(host, port, database)
         while suc == 'false':
-            suc, user, passwd, qb, message = self.get_credentials(host, port, database, message=message)
+            suc, qb, message = self.get_credentials(host, port, database, message=message)
         if suc == 'exit':
             pass
         elif suc == 'true':
@@ -308,13 +305,13 @@ class dbconnect:
             try:
                 qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=user, password=passwd)
                 qb.check_connection()
-                return 'true', user, passwd, qb, errorMessage
+                return 'true', qb, errorMessage
             except cx_Oracle.DatabaseError as e:
                 errorObj, = e.args
                 errorMessage = errorObj.message
-                return 'false', user, passwd, qb, errorMessage
+                return 'false', qb, errorMessage
         else:
-            return 'exit', user, passwd, qb, errorMessage
+            return 'exit', qb, errorMessage
 
 
 
