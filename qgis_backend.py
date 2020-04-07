@@ -101,7 +101,8 @@ class qgis_backend:
                             meetp_df.GDS_ID = pd.to_numeric(meetp_df.GDS_ID, downcast='integer')
                             df_list.append(meetp_df)
                     meetp_df_all = pd.concat(df_list, ignore_index=True)
-                    if ~meetp_df_all.empty:
+                    meetp_df_all.head()
+                    if meetp_df_all.empty != True:
                         return meetp_df_all
                     else:
                         raise ValueError(
