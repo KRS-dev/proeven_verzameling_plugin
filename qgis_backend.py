@@ -88,7 +88,7 @@ class qgis_backend:
                     query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
                         + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
                         + 'WHERE bis_graf_loc_aanduidingen.loc_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
+                    fetched, description = self.fetch(query, values)
 
                     if (0 < len(fetched)):
                         meetp_df = pd.DataFrame(fetched)
@@ -116,7 +116,7 @@ class qgis_backend:
                     values = tuple( gds_ids )
                     bindValues = [':' + str(i+1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_geo_dossiers WHERE gds_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
+                    fetched, description = self.fetch(query, values)
                     if (0 < len(fetched)):
                         geod_df = pd.DataFrame(fetched)
                         colnames = [ desc[0] for desc in description ]
@@ -140,7 +140,7 @@ class qgis_backend:
                     values = tuple(bor_ids)
                     bindValues = [':' + str(i+1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_geotech_monsters WHERE bor_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
+                    fetched, description = self.fetch(query, values)
                     if(len(fetched) > 0):
                         g_mon_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
@@ -183,7 +183,7 @@ class qgis_backend:
                         values = values + proef_type
                         bindDict = dict(zip(bindAll, values))
                         query = 'SELECT * FROM bis_trx_proeven WHERE proef_type IN ({}) AND gtm_id IN ({})'.format(','.join(bindProef), ','.join(bindValues))
-                        fetched, description = fetch(query, bindDict)
+                        fetched, description =self.fetch(query, bindDict)
                         if(len(fetched) > 0):
                             trx_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
@@ -231,12 +231,12 @@ class qgis_backend:
                     values = list(gtm_ids)
                     bindValues = [':' + str(i+1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_trx_proef_result WHERE gtm_id IN ({})'.format(','.join(bindValues)) 
-                    fetched, description = fetch(query, values)
-                    if( len( fetched ) > 0 ):
+                    fetched, description =self.fetch(query, values)
+                    if(len(fetched) > 0):
                         trx_result_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_result_df.columns = colnames
-                        trx_result_df[['EA','COH','FI']] = trx_result_df[['EA','COH','FI']].apply(pd.to_numeric)
+                        trx_result_df[['EA', 'COH', 'FI']] = trx_result_df[['EA', 'COH', 'FI']].apply(pd.to_numeric)
                         return trx_result_df
                     else:
                         print('These selected boring(en): ' + str(values) + \
@@ -246,22 +246,22 @@ class qgis_backend:
             else:
                 raise ValueError('No gtm_ids were supplied.')
         else:
-            raise TypeError('Input is not a list or tuple')   
+            raise TypeError('Input is not a list or tuple')
 
     # Querying TRX_deelproeven
     def get_trx_dlp(self, gtm_ids):
-        if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):   
-            if len(gtm_ids) > 0: 
+        if isinstance(gtm_ids, (list, tuple, pd.Series)):   
+            if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
                     values = list(gtm_ids)
                     bindValues = [':' + str(i + 1) for i in range(len(values))]
-                    query = 'SELECT * FROM bis_trx_dlp WHERE gtm_id IN ({})'.format(','.join(bindValues)) 
-                    fetched, description = fetch(query, values)
-                    if( len( fetched ) > 0 ):
+                    query = 'SELECT * FROM bis_trx_dlp WHERE gtm_id IN ({})'.format(','.join(bindValues))
+                    fetched, description =self.fetch(query, values)
+                    if(len(fetched) > 0):
                         trx_dlp = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_dlp.columns = colnames
-                        trx_dlp.loc[:,'EPS50':] = trx_dlp.loc[:,'EPS50':].apply(pd.to_numeric)
+                        trx_dlp.loc[:, 'EPS50':] = trx_dlp.loc[:, 'EPS50':].apply(pd.to_numeric)
                         return trx_dlp
                     else:
                         print('These selected geomonsters: ' + str(values) + \
@@ -271,7 +271,7 @@ class qgis_backend:
             else:
                 raise ValueError('No gtm_ids were supplied.')
         else:
-            raise TypeError('Input is not a list or tuple') 
+            raise TypeError('Input is not a list or tuple')
 
     # Querying TRX_dlp_results
     def get_trx_dlp_result(self, gtm_ids):
@@ -281,13 +281,13 @@ class qgis_backend:
                     values = list(gtm_ids)
                     bindValues = [':' + str(i + 1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_trx_dlp_result WHERE gtm_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
-                    if( len( fetched ) > 0 ):
+                    fetched, description =self.fetch(query, values)
+                    if(len(fetched) > 0):
                         trx_dlp_result = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_dlp_result.columns = colnames
                         trx_dlp_result.rename(columns={'TPR_EA':'EA'},inplace=True)
-                        trx_dlp_result.loc[:,'EA':] = trx_dlp_result.loc[:,'EA':].apply(pd.to_numeric)
+                        trx_dlp_result.loc[:, 'EA':] = trx_dlp_result.loc[:, 'EA':].apply(pd.to_numeric)
                         return trx_dlp_result
                     else:
                         print('These selected boring(en): ' + str(values) + \
@@ -299,7 +299,7 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')   
 
-    # Filter on ea/strain        
+    # Filter on ea/strain
     def select_on_ea(self, trx_result, ea = 2):
         if isinstance(trx_result, pd.DataFrame): 
             new_trx_result_ea = trx_result[ea == trx_result.EA]
@@ -310,24 +310,24 @@ class qgis_backend:
     # Calculating averages and standard deviations on TRX_results
     def get_average_per_ea(self, df_trx_result, ea = 5):
         if isinstance(df_trx_result, pd.DataFrame):
-            df_trx_temp = select_on_ea(df_trx_result, ea)
-            mean_coh = round(np.mean( df_trx_temp['COH']), 1)
-            mean_fi = round(np.mean( df_trx_temp['FI']), 1)
-            std_coh = round(np.std( df_trx_temp['COH']),1)
-            std_fi = round(np.std( df_trx_temp['FI']), 1)
+            df_trx_temp = self.select_on_ea(df_trx_result, ea)
+            mean_coh = round(np.mean(df_trx_temp['COH']), 1)
+            mean_fi = round(np.mean(df_trx_temp['FI']), 1)
+            std_coh = round(np.std(df_trx_temp['COH']), 1)
+            std_fi = round(np.std(df_trx_temp['FI']), 1)
             N = int(len(df_trx_temp.index))
-            return mean_fi,std_fi,mean_coh,std_coh,N
+            return mean_fi, std_fi, mean_coh, std_coh, N
         else:
             raise TypeError('No pandas dataframe was supplied.')
 
     # Creating least square fits on TRX_dlp_results
     def get_least_squares(
         self,
-        df_trx_dlp_result, 
-        plot_name = 'Lst_Sqrs_name', 
-        ea = 2, 
-        show_plot = True, 
-        save_plot = False
+        df_trx_dlp_result,
+        plot_name='Lst_Sqrs_name',
+        ea=2,
+        show_plot=True, 
+        save_plot=False
         ):
         df = self.select_on_ea( df_trx_dlp_result, ea)
         data_full = (df.P, df.Q)
@@ -422,19 +422,19 @@ class qgis_backend:
 
     # Querying compression tests\samendrukkingsproeven
     def get_sdp(self, gtm_ids):
-        if isinstance(gtm_ids, ( list, tuple, pd.Series ) ): 
-            if len( gtm_ids ) > 0:
+        if isinstance(gtm_ids, (list, tuple, pd.Series)): 
+            if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
                     values = list( gtm_ids )
                     bindValues = [':' + str(i + 1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_sdp WHERE gtm_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
-                    if( len( fetched ) > 0 ):
+                    fetched, description = self.fetch(query, values)
+                    if(len(fetched) > 0):
                         sdp_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         sdp_df.columns = colnames
-                        sdp_df.loc[:,'VOLUMEGEWICHT_DROOG':] = \
-                            sdp_df.loc[:,'VOLUMEGEWICHT_DROOG':].apply(pd.to_numeric)
+                        sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':] = \
+                            sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':].apply(pd.to_numeric)
                         return sdp_df
                     else:
                         print('These selected boring(en): ' + str(values) + \
@@ -448,14 +448,14 @@ class qgis_backend:
 
     # Querying sdp_results
     def get_sdp_result(self, gtm_ids):
-        if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):
-            if len( gtm_ids ) > 0: 
+        if isinstance(gtm_ids, (list, tuple, pd.Series)):
+            if len(gtm_ids) > 0: 
                 if all(isinstance(x, (int)) for x in gtm_ids):
-                    values = list( gtm_ids )
+                    values = list(gtm_ids)
                     bindValues = [':' + str(i + 1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_sdp_resultaten WHERE gtm_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = fetch(query, values)
-                    if( len( fetched ) > 0 ):
+                    fetched, description = self.fetch(query, values)
+                    if(len(fetched) > 0):
                         sdp_result_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         sdp_result_df.columns = colnames
@@ -476,7 +476,7 @@ class qgis_backend:
     def join_trx_with_trx_results(self, gtm_ids, proef_type = 'CD'):
         if isinstance(gtm_ids, ( list, tuple, pd.Series ) ):
             if len(gtm_ids) > 0:
-                if all( isinstance( x, ( int )) for x in gtm_ids ):
+                if all(isinstance(x, (int)) for x in gtm_ids):
 
                     values = tuple(gtm_ids)
                     bindValues = [':' + str(i + 1) for i in range(len(values))]
@@ -491,8 +491,8 @@ class qgis_backend:
                         + 'INNER JOIN bis_trx_proef_result ON bis_trx_proeven.gtm_id = bis_trx_proef_result.gtm_id '\
                         + 'AND bis_trx_proeven.trx_volgnr = bis_trx_proef_result.trx_volgnr '\
                         + 'WHERE proef_type = ({}) AND bis_trx_proeven.gtm_id IN ({})'.format(','.join(bindProef), ','.join(bindValues))
-                    fetched, description = fetch(query, bindDict)
-                    if( len( fetched ) > 0 ):
+                    fetched, description = self.fetch(query, bindDict)
+                    if(len(fetched) > 0):
                         trx_df = pd.DataFrame(fetched)
                         colnames = [desc[0] for desc in description]
                         trx_df.columns = colnames
