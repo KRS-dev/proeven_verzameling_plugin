@@ -22,11 +22,10 @@ class qgis_backend:
         self.bis_dsn = cora.makedsn(host, port, service_name=database)
 
     def check_connection(self):
-        bis_dsn = cora.makedsn(self.host, self.port, service_name=self.database)
         with cora.connect(
             user=self.username,
             password=self.password,
-            dsn=bis_dsn
+            dsn=self.bis_dsn
                 ) as dbcon:
             pass
 
@@ -42,7 +41,6 @@ class qgis_backend:
             ) as dbcon:
         '''
         ## Using an Oracle database:
-        
         with cora.connect(
             user=self.username,
             password=self.password,
