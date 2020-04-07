@@ -24,7 +24,7 @@
 import sys, os
 import pandas as pd
 import numpy as np
-import xlwt, psycopg2
+import xlwt, cx_Oracle
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
@@ -266,9 +266,9 @@ class dbconnect:
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
         
-        suc, user, passwd, qb = self.get_credentials(host, port, database)
+        suc, user, passwd, qb, message = self.get_credentials(host, port, database)
         while suc == 'false':
-            suc, user, passwd, qb = self.get_credentials(host, port, database, message='Username or Password incorrect')
+            suc, user, passwd, qb, message = self.get_credentials(host, port, database, message=message)
         if suc == 'exit':
             pass
         elif suc == 'true':
@@ -301,16 +301,18 @@ class dbconnect:
         
         (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None, message)
         qb = None
+        errorMessage = None
         if success:
             try:
                 qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=user, password=passwd)
                 qb.fetch('SELECT 1', None)
                 print('password correct')
-                return 'true', user, passwd, qb
-            except psycopg2.OperationalError:
-                return 'false', user, passwd, qb
+                return 'true', user, passwd, qb, errorMessage
+            except cx_Oracle.DatabaseError as e:
+                errorMessage, = e.args
+                return 'false', user, passwd, qb, errorMessage
         else:
-            return 'exit', user, passwd, qb
+            return 'exit', user, passwd, qb, errorMessage
 
 
 
