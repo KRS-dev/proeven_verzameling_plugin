@@ -85,7 +85,7 @@ class qgis_backend:
                 if(all(isinstance(x, int) for x in loc_ids)):
                     values = list(loc_ids)
                     chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
-                    meetp_df_all = pd.DataFrame()
+                    df_list = []
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
@@ -98,9 +98,9 @@ class qgis_backend:
                             colnames = [desc[0] for desc in description]
                             meetp_df.columns = colnames
                             meetp_df.GDS_ID = meetp_df.GDS_ID.fillna(0)
-                            meetp_df.GDS_ID = pd.to_numeric(
-                                meetp_df.GDS_ID, downcast='integer')
-                            meetp_df_all.append(meetp_df, ignore_index=True)
+                            meetp_df.GDS_ID = pd.to_numeric(meetp_df.GDS_ID, downcast='integer')
+                            df_list.append(meetp_df)
+                    meetp_df_all = pd.concat(df_list, ignore_index=True)
                     if ~meetp_df_all.empty:
                         return meetp_df_all
                     else:
