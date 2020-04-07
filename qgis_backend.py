@@ -85,7 +85,7 @@ class qgis_backend:
                 if(all(isinstance(x, int) for x in loc_ids)):
                     values = list(loc_ids)
                     chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
-                    meetp_df_all = pd.Dataframe()
+                    meetp_df_all = pd.DataFrame()
                     for chunk in chunks:
                         values = chunk
                         bindValues = [':' + str(i+1) for i in range(len(values))]
