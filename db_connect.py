@@ -256,7 +256,7 @@ class dbconnect:
         settings = QSettings()
         allkeys = settings.allKeys()
         allvalues = [settings.value(k) for k in allkeys]
-        allsettings = dict(zip(allkeys,allvalues))
+        allsettings = dict(zip(allkeys, allvalues))
         database = self.dlg.cmb_databases.currentText()
         for key, val in allsettings.items():
             if 'database' in key:
