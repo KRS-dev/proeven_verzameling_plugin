@@ -259,8 +259,9 @@ class dbconnect:
         allsettings = dict(zip(allkeys,allvalues))
         database = self.dlg.cmb_databases.currentText()
         for key, val in allsettings.items():
-            if val == database:
-                databasekey = key
+            if 'database' in key:
+                if val == database:
+                    databasekey = key
         databasekey = databasekey.rstrip('database')
         selected_databasekeys = [k for k in allkeys if databasekey in k]
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
