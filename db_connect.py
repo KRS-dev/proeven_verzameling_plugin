@@ -347,7 +347,10 @@ class dbconnect:
         df_meetp = qb.get_meetpunten(loc_ids)
         df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
         df_gm = qb.get_geotech_monsters(loc_ids)
-        df_gm_filt_on_z = qb.select_on_z_coord(df_gm, heights[0], heights[1])
+        if df_gm is not None:
+            df_gm_filt_on_z = qb.select_on_z_coord(df_gm, heights[0], heights[1])
+            if df_gm_filt_on_z is None:
+                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(heights[0], heights[1]), level=Qgis.Critical, duration=5)
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
 
