@@ -17,8 +17,8 @@ import matplotlib.offsetbox as offsetbox
 class qgis_backend:
 
     def __init__(self, host, port, database, username, password):
-        self.host = host
-        self.port = port
+        self.username = username
+        self.password = password
         self.bis_dsn = cora.makedsn(host, port, service_name=database)
 
     def check_connection(self):
