@@ -310,7 +310,8 @@ class dbconnect:
                 print('password correct')
                 return 'true', user, passwd, qb, errorMessage
             except cx_Oracle.DatabaseError as e:
-                errorMessage, = e.args
+                errorObj, = e.args
+                errorMessage = errorObj.message
                 return 'false', user, passwd, qb, errorMessage
         else:
             return 'exit', user, passwd, qb, errorMessage
