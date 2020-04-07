@@ -83,21 +83,26 @@ class qgis_backend:
         if isinstance(loc_ids, (list, tuple, pd.Series)):
             if len(loc_ids) > 0:
                 if(all(isinstance(x, int) for x in loc_ids)):
-                    values = tuple(loc_ids)
-                    bindValues = [':' + str(i+1) for i in range(len(values))]
-                    query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
-                        + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
-                        + 'WHERE bis_graf_loc_aanduidingen.loc_id IN ({})'.format(','.join(bindValues))
-                    fetched, description = self.fetch(query, values)
-
-                    if (0 < len(fetched)):
-                        meetp_df = pd.DataFrame(fetched)
-                        colnames = [desc[0] for desc in description]
-                        meetp_df.columns = colnames
-                        meetp_df.GDS_ID = meetp_df.GDS_ID.fillna(0)
-                        meetp_df.GDS_ID = pd.to_numeric(
-                            meetp_df.GDS_ID, downcast='integer')
-                        return meetp_df
+                    values = list(loc_ids)
+                    chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
+                    meetp_df_all = pd.Dataframe()
+                    for chunk in chunks:
+                        values = chunk
+                        bindValues = [':' + str(i+1) for i in range(len(values))]
+                        query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
+                            + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
+                            + 'WHERE bis_graf_loc_aanduidingen.loc_id IN ({})'.format(','.join(bindValues))
+                        fetched, description = self.fetch(query, values)
+                        if (0 < len(fetched)):
+                            meetp_df = pd.DataFrame(fetched)
+                            colnames = [desc[0] for desc in description]
+                            meetp_df.columns = colnames
+                            meetp_df.GDS_ID = meetp_df.GDS_ID.fillna(0)
+                            meetp_df.GDS_ID = pd.to_numeric(
+                                meetp_df.GDS_ID, downcast='integer')
+                            meetp_df_all.append(meetp_df, ignore_index=True)
+                    if ~meetp_df_all.empty:
+                        return meetp_df_all
                     else:
                         raise ValueError(
                             'These selected geometry points do not contain valid loc_ids: ' + str(values))
@@ -113,7 +118,7 @@ class qgis_backend:
         if isinstance(gds_ids, (list, tuple, pd.Series)):
             if len(gds_ids) > 0:
                 if(all(isinstance(x, int) for x in gds_ids)):
-                    values = tuple( gds_ids )
+                    values = tuple(gds_ids)
                     bindValues = [':' + str(i+1) for i in range(len(values))]
                     query = 'SELECT * FROM bis_geo_dossiers WHERE gds_id IN ({})'.format(','.join(bindValues))
                     fetched, description = self.fetch(query, values)
