@@ -307,8 +307,6 @@ class dbconnect:
         if success:
             try:
                 qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=user, password=passwd)
-                qb.fetch('SELECT 1', None)
-                print('password correct')
                 return 'true', user, passwd, qb, errorMessage
             except cx_Oracle.DatabaseError as e:
                 errorObj, = e.args
