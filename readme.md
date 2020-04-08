@@ -31,8 +31,9 @@ A step by step series of examples that tell you how to get [proeven_verzameling_
 
 Step 1: Connecting to the Oracle database in QGIS.
 
+![new connection](/images/new_connection.PNG)![GitHub Logo](/images/connection_window.PNG)
 ```
-![GitHub Logo](/images/logo.png)
+
 ```
 
 And repeat
