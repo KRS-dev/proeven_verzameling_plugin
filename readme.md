@@ -34,7 +34,7 @@ Step 1: Connecting to the Oracle database in QGIS.
 ![new connection](/images/new_connection.png)
 ![GitHub Logo](/images/connection_window.PNG)
 
-Step 2: Download the .zip file of the repository and install it using "install from ZIP" in QGIS
+Step 2: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
 ![install from ZIP](/images/install_from_zip.PNG)
 
@@ -42,6 +42,7 @@ Step 2: Download the .zip file of the repository and install it using "install f
 And you are finished installing the plugin!
 A small icon, ![icon](/icon.png), should now show up in your QGIS toolbar. If you click on it a form will show up where your inputs are asked to query the BIS database.
 
+![Plugin Window](/images/plugin_window.PNG)
 
 
 ## Deployment
