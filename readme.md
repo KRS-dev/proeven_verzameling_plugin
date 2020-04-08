@@ -31,19 +31,18 @@ A step by step series of examples that tell you how to get [proeven_verzameling_
 
 Step 1: Connecting to the Oracle database in QGIS.
 
-![new connection](/images/new_connection.PNG)![GitHub Logo](/images/connection_window.PNG)
-```
+![new connection](/images/new_connection.png)
+![GitHub Logo](/images/connection_window.PNG)
 
-```
+Step 2: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
-And repeat
+![install from ZIP](/images/install_from_zip.PNG)
 
-```
-until finished
-```
 
-End with an example of getting some data out of the system or using it for a little demo
+And you are finished installing the plugin!
+A small icon, ![icon](/icon.png), should now show up in your QGIS toolbar. If you click on it a form will show up where your inputs are asked to query the BIS database.
 
+![Plugin Window](/images/plugin_window.PNG)
 
 
 ## Deployment
