@@ -17,8 +17,10 @@ These instructions will get you a copy of the plugin up and running on your loca
 * #### Python Modules Installed
 
   * cx_Oracle
+  * numpy
+  * matplotlib
+  * pandas
   * xlwt
-  * ...
 
 ```
 Give examples
