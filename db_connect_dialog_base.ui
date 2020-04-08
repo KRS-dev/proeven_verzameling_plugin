@@ -365,7 +365,7 @@
     <item>
      <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Select the strain on which statistics is automatically done:</string>
+       <string>Select the strain on which the statistics will be automatically done:</string>
       </property>
       <property name="buddy">
        <cstring>sb_strain</cstring>
@@ -481,7 +481,7 @@
     <item>
      <widget class="QCheckBox" name="cb_showPlot">
       <property name="text">
-       <string>Show plot</string>
+       <string>Show Plot</string>
       </property>
      </widget>
     </item>
