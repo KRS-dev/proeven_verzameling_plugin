@@ -22,10 +22,6 @@ These instructions will get you a copy of the plugin up and running on your loca
   * pandas
   * xlwt
 
-```
-Give examples
-```
-
 ### Installing
 
 A step by step series of examples that tell you how to get [proeven_verzameling_plugin](https://github.com/KRS-dev/proeven_verzameling_plugin) running in your QGIS build.
