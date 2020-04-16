@@ -331,8 +331,6 @@ class dbconnect:
             proef_types.append('CD')
         if UU:
             proef_types.append('UU')
-        volume_gewicht_selectie = [maxVg, minVg] # kN/m3
-        heights = [maxH, minH] # mNAP
         
         rek_selectie = [ea]
         output_file = output_name + '.xls'
@@ -348,20 +346,22 @@ class dbconnect:
         df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
         df_gm = qb.get_geotech_monsters(loc_ids)
         if df_gm is not None:
-            df_gm_filt_on_z = qb.select_on_z_coord(df_gm, heights[0], heights[1])
+            df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
             if df_gm_filt_on_z is None:
-                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(heights[0], heights[1]), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH), level=Qgis.Critical, duration=5)
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
 
         df_sdp = qb.get_sdp(df_gm_filt_on_z.GTM_ID)
+        if df_sdp is not None:
+            df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
         if df_sdp is not None:
             df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
             df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
 
         df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
         if df_trx is not None:
-            df_trx = qb.select_on_vg(df_trx, volume_gewicht_selectie[0], volume_gewicht_selectie[1])
+            df_trx = qb.select_on_vg(df_trx, maxVg, minVg)
         if df_trx is not None:
             # Get all TRX results, TRX deelproeven and TRX deelproef results
             df_trx_results = qb.get_trx_result(df_trx.GTM_ID)
