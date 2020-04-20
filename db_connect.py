@@ -191,41 +191,44 @@ class dbconnect:
         """Run method that performs all the real work"""
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
+        if self.first_start:
             self.first_start = False
             self.dlg = dbconnectDialog()
             self.reset_ui()
-            #Initialize QGIS filewidget to select a directory
+            # Initialize QGIS filewidget to select a directory
             self.dlg.fileWidget.setStorageMode(1)
-            #Signalling the reset button 
+            # Signalling the reset button 
             self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
-            self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get) 
+
+            # Signalling the Open button. Here the actual logic behind the plugin starts
+            self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get)
             # Strain slider and spinbox connection
             self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
             self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
-            #self.dlg.tb_newConnection.clicked.connect(self.new_connection)
-        
-        
+
+        # Look for all the databases connected in Qgis
         settings = QSettings()
         allkeys = settings.allKeys()
         databases = [k for k in allkeys if 'database' in k]
-        databasenames = [settings.value(k) for k in databases]
-        self.dlg.cmb_databases.clear()
-        self.dlg.cmb_databases.addItems(databasenames)
-
+        databaseNames = [settings.value(k) for k in databases]
+        # Holding on to the previous current index 
+        cur_i = self.dlg.DatabaseComboBox.currentIndex()
+        self.dlg.DatabaseComboBox.clear()
+        self.dlg.DatabaseComboBox.addItems(databaseNames)
+        # On first_start there would be no previous current index and currentIndex would return -1
+        if cur_i != -1:
+            self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
 
         # show the dialog
         self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            pass
 
     def get(self):
+        ''' Extraction of info from the dialog form. 
+            Checking credentials for the Oracle database connection.'''
         filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
         selected_layer = self.dlg.cmb_layers.currentLayer()
+        database = self.dlg.cmb_databases.currentText()
         CU = self.dlg.cb_CU.isChecked()
         CD = self.dlg.cb_CD.isChecked()
         UU = self.dlg.cb_UU.isChecked()
@@ -233,6 +236,7 @@ class dbconnect:
         show_plot = self.dlg.cb_showPlot.isChecked()
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
+        
         args = {'selected_layer' : selected_layer,
                 'CU' : CU, 'CD' : CD, 'UU' : UU,
                 'ea' : ea,
@@ -255,7 +259,6 @@ class dbconnect:
         allkeys = settings.allKeys()
         allvalues = [settings.value(k) for k in allkeys]
         allsettings = dict(zip(allkeys, allvalues))
-        database = self.dlg.cmb_databases.currentText()
         for key, val in allsettings.items():
             if 'database' in key:
                 if val == database:
@@ -265,15 +268,44 @@ class dbconnect:
         host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
         port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
         
-        suc, qb, message = self.get_credentials(host, port, database)
-        while suc == 'false':
-            suc, qb, message = self.get_credentials(host, port, database, message=message)
-        if suc == 'exit':
-            pass
-        elif suc == 'true':
-            args['qb'] = qb
-            self.qgis_frontend(**args)
-
+        saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], None)
+        savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], None)
+        username = None
+        password = None
+        if saveUsername == 'true':
+            saveUsername = True
+            username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
+        if savePassword == 'true':
+            savePassword = True
+            password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
+        
+        errorMessage = None
+        if saveUsername is True and savePassword is True:
+            try:
+                qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=username, password=password)
+                qb.check_connection()
+                args['qb'] = qb
+                self.qgis_frontend(**args)
+            except cx_Oracle.DatabaseError as e:
+                errorObj, = e.args
+                errorMessage = errorObj.message
+                suc = 'false'
+                while suc == 'false':
+                    suc, qb, errorMessage = self.get_credentials(host, port, database, username=username, password=password, message=errorMessage)
+                if suc == 'exit':
+                    pass
+                elif suc == 'true':
+                    args['qb'] = qb
+                    self.qgis_frontend(**args)
+        else:
+            suc, qb, errorMessage = self.get_credentials(host, port, database, username=username, password=password)
+            while suc == 'false':
+                suc, qb, message = self.get_credentials(host, port, database, message=errorMessage)
+            if suc == 'exit':
+                pass
+            elif suc == 'true':
+                args['qb'] = qb
+                self.qgis_frontend(**args)
 
     def reset_ui(self):
         '''Reset all inputs to default values in the GUI'''
@@ -290,15 +322,15 @@ class dbconnect:
         self.dlg.hs_strain.setValue(5)
         self.dlg.cb_showPlot.setChecked(True)
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
-        self.dlg.le_outputName.setText('BIS_Extract')
+        self.dlg.le_outputName.setText('BIS_Geo_Proeven')
 
-    def get_credentials(self, host, port, database, message=None):
+    def get_credentials(self, host, port, database, username=None, password=None, message=None):
         uri = QgsDataSourceUri()
         # assign this information before you query the QgsCredentials data store
-        uri.setConnection(host, port, database, None, None)
+        uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
         
-        (success, user, passwd) = QgsCredentials.instance().get(connInfo, None, None, message)
+        (success, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
         qb = None
         errorMessage = None
         if success:
@@ -312,8 +344,6 @@ class dbconnect:
                 return 'false', qb, errorMessage
         else:
             return 'exit', qb, errorMessage
-
-
 
     def qgis_frontend(self,
         qb,
