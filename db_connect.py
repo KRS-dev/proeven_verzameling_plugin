@@ -212,12 +212,12 @@ class dbconnect:
         databases = [k for k in allkeys if 'database' in k]
         databaseNames = [settings.value(k) for k in databases]
         # Holding on to the previous current index 
-        cur_i = self.dlg.DatabaseComboBox.currentIndex()
-        self.dlg.DatabaseComboBox.clear()
-        self.dlg.DatabaseComboBox.addItems(databaseNames)
+        cur_i = self.dlg.cmb_databases.currentIndex()
+        self.dlg.cmb_databases.clear()
+        self.dlg.cmb_databases.addItems(databaseNames)
         # On first_start there would be no previous current index and currentIndex would return -1
         if cur_i != -1:
-            self.dlg.DatabaseComboBox.setCurrentIndex(cur_i)
+            self.dlg.cmb_databases.setCurrentIndex(cur_i)
 
         # show the dialog
         self.dlg.show()
