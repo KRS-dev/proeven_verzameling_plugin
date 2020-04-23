@@ -28,8 +28,8 @@ import xlwt
 import cx_Oracle
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
+from qgis.PyQt.QtGui import QIcon, QRegExpValidator
 from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
 
 # Initialize Qt resources from file resources.py
@@ -40,6 +40,7 @@ from . import qgis_backend
 
 class dbconnect:
     """QGIS Plugin Implementation."""
+
 
     def __init__(self, iface):
         """Constructor.
@@ -163,7 +164,6 @@ class dbconnect:
 
         return action
 
-
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -177,7 +177,6 @@ class dbconnect:
         # will be set False in run()
         self.first_start = True
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -185,7 +184,6 @@ class dbconnect:
                 self.tr(u'&db connect'),
                 action)
             self.iface.removeToolBarIcon(action)
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -197,14 +195,20 @@ class dbconnect:
             self.reset_ui()
             # Initialize QGIS filewidget to select a directory
             self.dlg.fileWidget.setStorageMode(1)
-            # Signalling the reset button 
+            # Signalling the reset button.
             self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
 
             # Signalling the Open button. Here the actual logic behind the plugin starts
             self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get)
-            # Strain slider and spinbox connection
-            self.dlg.sb_strain.valueChanged.connect(self.dlg.hs_strain.setValue)
-            self.dlg.hs_strain.sliderMoved.connect(self.dlg.sb_strain.setValue)
+            
+            rx1 = QRegExp(r"^\[\d{1,2}(\.\d{1})?(?:,\d{1,2}(\.\d{1})?)+\]$")
+            vg_validator = QRegExpValidator(rx1)
+            self.dlg.le_vg_sdp.setValidator(vg_validator)
+            self.dlg.le_vg_trx.setValidator(vg_validator)
+
+            rx2 = QRegExp(r"^[\w\-. ]+$")
+            filename_validator = QRegExpValidator(rx2)
+            self.dlg.le_outputName.setValidator(filename_validator)
 
         # Look for all the databases connected in Qgis
         settings = QSettings()
@@ -236,7 +240,11 @@ class dbconnect:
         show_plot = self.dlg.cb_showPlot.isChecked()
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
-        
+        volG_sel_trx = self.dlg.le_vg_trx.text()
+        volG_sel_trx = [float(x) for i in volG_sel_trx.rstrip(']').lstrip('[').rstrip(',').split(',')]
+        volG_sel_sdp = self.dlg.le_vg_sdp.text()
+        volG_sel_sdp = [float(x) for i in volG_sel_sdp.rstrip(']').lstrip('[').rstrip(',').split(',')]
+        print(volG_sel_sdp, '\n', volG_sel_trx)
         args = {'selected_layer' : selected_layer,
                 'CU' : CU, 'CD' : CD, 'UU' : UU,
                 'ea' : ea,
@@ -310,7 +318,7 @@ class dbconnect:
     def reset_ui(self):
         '''Reset all inputs to default values in the GUI'''
         self.dlg.cb_filterOnHeight.setChecked(False)
-        self.dlg.sb_maxHeight.setValue(10)
+        self.dlg.sb_maxHeight.setValue(100)
         self.dlg.sb_minHeight.setValue(-100)
         self.dlg.cb_filterOnVolumetricWeight.setChecked(False)
         self.dlg.sb_maxVolumetricWeight.setValue(22)
@@ -319,7 +327,6 @@ class dbconnect:
         self.dlg.cb_CD.setChecked(False)
         self.dlg.cb_UU.setChecked(False)
         self.dlg.sb_strain.setValue(5)
-        self.dlg.hs_strain.setValue(5)
         self.dlg.cb_showPlot.setChecked(True)
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Geo_Proeven')
