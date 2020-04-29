@@ -29,8 +29,8 @@ import cx_Oracle
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
-from qgis.PyQt.QtGui import QIcon, QRegExpValidator, QProgressDialog
-from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
+from qgis.PyQt.QtGui import QIcon, QRegExpValidator
+from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox, QProgressDialog
 
 # Initialize Qt resources from file resources.py
 from .resources import *
