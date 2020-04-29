@@ -502,8 +502,6 @@ class qgis_backend:
             ax4.set_xlabel(r'$\sigma_n$ Normaalspanning')
 
             plt.tight_layout()
-            if show_plot:
-                plt.show()
         return round(np.degrees(fi), 1), round(coh, 1), round(E), round(E_per_n, 1), round(eps*100, 1), N
 
     def get_sdp(self, gtm_ids):

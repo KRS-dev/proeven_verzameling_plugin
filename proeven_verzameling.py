@@ -29,6 +29,7 @@ import pandas as pd
 import numpy as np
 import xlwt
 import cx_Oracle
+from matplotlib import pyplot as plt
 
 from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
@@ -613,7 +614,8 @@ class ProevenVerzamelingTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            self.duration = (time.time() - self.duration)/1000
+            plt.show()
+            self.duration = round((time.time() - self.duration)/1000, 1)
             self.iface.messageBar().pushMessage(
                 'Task "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
