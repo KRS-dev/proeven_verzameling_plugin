@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/db_connect" >
+    <qresource prefix="/plugins/proeven_verzameling" >
         <file>icon.png</file>
     </qresource>
 </RCC>

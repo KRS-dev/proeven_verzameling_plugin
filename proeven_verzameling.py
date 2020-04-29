@@ -194,12 +194,10 @@ class ProevenVerzameling:
             self.reset_ui()
             # Initialize QGIS filewidget to select a directory
             self.dlg.fileWidget.setStorageMode(1)
-            # Signalling the reset button.
-            self.dlg.buttonBox.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.reset_ui)
-
             # Signalling the Open button. Here the actual logic behind the plugin starts
             self.dlg.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.read_form)
-            
+            # Signalling the reset button.
+            self.dlg.buttonBox.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.reset_ui)
             rx1 = QRegExp(r"^\[\d{1,2}(\.\d{1})?(?:,\d{1,2}(\.\d{1})?)+\]$")
             vg_validator = QRegExpValidator(rx1)
             self.dlg.le_vg_sdp.setValidator(vg_validator)
