@@ -8,7 +8,7 @@ Summary: Base functions for qgis_frontend.py, Querying the data from the proeven
 import pandas as pd
 import numpy as np
 #import psycopg2 as psy
-import cx_Oracle as cora 
+import cx_Oracle as cora
 #or
 #import pyodbc as cora
 import matplotlib.pyplot as plt
@@ -53,7 +53,6 @@ class qgis_backend:
 
             cur = dbcon.cursor()
             cur.execute(query, data)
-            # Print('SQL QUERY: \n' + query )
             fetched = cur.fetchall()
             description = cur.description
             return fetched, description
@@ -64,7 +63,6 @@ class qgis_backend:
         features = QgisLayer.selectedFeatures()
 
         if len(features) > 0:
-            print(str(len(features)) + ' points were selected')
             for f in features:
                 try:
                     loc_ids.append(f.attribute('loc_id'))
@@ -84,7 +82,7 @@ class qgis_backend:
             if len(loc_ids) > 0:
                 if(all(isinstance(x, int) for x in loc_ids)):
                     values = list(loc_ids)
-                    chunks = [values[x:x+1000] for x in range(0, len(values), 1000)]
+                    chunks = [values[x:x + 1000] for x in range(0, len(values), 1000)]
                     df_list = []
                     for chunk in chunks:
                         values = chunk
@@ -113,8 +111,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')
 
-    # Querying geodossiers
     def get_geo_dossiers(self, gds_ids):
+        """Querying geodossiers"""
         if isinstance(gds_ids, (list, tuple, pd.Series)):
             if len(gds_ids) > 0:
                 if(all(isinstance(x, int) for x in gds_ids)):
@@ -134,9 +132,9 @@ class qgis_backend:
                     geod_df_all = pd.concat(df_list, ignore_index=True)
                     if geod_df_all.empty != True:
                         return geod_df_all
-                    else:
+                    '''else:
                         raise ValueError('The selected gds_ids: ' + str(values) + \
-                        ' do not contain any geodossiers.')
+                        ' do not contain any geodossiers.')'''
                 else:
                     raise TypeError('not all inputs are integers')
             else:
@@ -144,8 +142,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')    
 
-    # Querying geotechnische monsters
     def get_geotech_monsters(self, bor_ids):
+        """Querying geotechnische monsters"""
         if isinstance(bor_ids, (list, tuple, pd.Series)):
             if len(bor_ids) > 0:
                 if(all(isinstance(x, (int)) for x in bor_ids)):
@@ -166,9 +164,9 @@ class qgis_backend:
                     g_mon_df_all = pd.concat(df_list)
                     if g_mon_df_all.empty != True:
                         return g_mon_df_all
-                    else:
+                    '''else:
                         print('These selected boring(en): ' + str(values) + \
-                        ' do not contain any GEO_Monsters.')
+                        ' do not contain any GEO_Monsters.')'''
                 else:
                     raise TypeError('not all inputs are integers')
             else:
@@ -176,20 +174,19 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')
 
-    # Filter on height of the Geotechnical monsters
     def select_on_z_coord(self, g_mon_df, zmax, zmin):
+        """Filter on height of the Geotechnical monsters"""
         if isinstance(g_mon_df, pd.DataFrame):
             new_g_mon_df = g_mon_df[(zmax > g_mon_df.Z_COORDINAAT_LAAG) & (g_mon_df.Z_COORDINAAT_LAAG > zmin)]
             if new_g_mon_df is not None:
                 return new_g_mon_df
-            else:
-                print('Between ' + zmax + ' and ' + zmin + 'm there are no GEO_Monsters found.')
+            '''else:
+                print('Between ' + zmax + ' and ' + zmin + 'm there are no GEO_Monsters found.')'''
         else:
             raise TypeError('No pandas dataframe was supplied')
 
-
-    # Querying TRX_proeven
     def get_trx(self, gtm_ids, proef_type = ('CD')):
+        """Querying TRX_proeven"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)):
             if all(any(x == i for i in ('CU', 'CD', 'UU')) for x in proef_type):
                 if len(gtm_ids) > 0:
@@ -218,9 +215,9 @@ class qgis_backend:
                         trx_df_all = pd.concat(df_list, ignore_index=True)
                         if trx_df_all.empty != True:
                             return trx_df_all
-                        else:
-                            print('These selected boring(en): ' + str(values) + \
-                                ' do not contain any triaxiaal proeven with proef_type: ' + str(proef_type))
+                        '''else:
+                            raise ValueError('These selected boring(en): ' + str(values) + \
+                                ' do not contain any triaxiaal proeven with proef_type: ' + str(proef_type))'''
                     else:
                         raise TypeError('not all inputs are integers')
                 else:
@@ -230,9 +227,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')
 
-
-    # Filter on Volumetric weight
     def select_on_vg(self, trx_df, Vg_max=20, Vg_min=17, soort='nat'):
+        """Filter on Volumetric weight"""
         #Volume gewicht y in kN/m3
         if isinstance(trx_df, pd.DataFrame):
             if soort == 'nat':
@@ -244,13 +240,13 @@ class qgis_backend:
                     only \'nat\' and \'droog\' are allowed.')
             if new_trx_df is not None:
                 return new_trx_df
-            else:
-                print('Between: \'' + Vg_max + '\' and \'' + Vg_min + '\' kg/m3 there are no GEO_Monsters found')
+            '''else:
+                print('Between: \'' + Vg_max + '\' and \'' + Vg_min + '\' kg/m3 there are no GEO_Monsters found')'''
         else:
             raise TypeError('No pandas dataframe was supplied')
 
-    # Querying TRX_results
     def get_trx_result(self, gtm_ids):
+        """Querying TRX_results"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)):
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
@@ -271,9 +267,9 @@ class qgis_backend:
                     trx_result_df_all = pd.concat(df_list, ignore_index=True)
                     if trx_result_df_all.empty != True:
                         return trx_result_df_all
-                    else:
+                    '''else:
                         print('These selected boring(en): ' + str(values) + \
-                            ' do not contain any trx_results.')
+                            ' do not contain any trx_results.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:
@@ -281,8 +277,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')
 
-    # Querying TRX_deelproeven
     def get_trx_dlp(self, gtm_ids):
+        """Querying TRX_deelproeven"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)):   
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
@@ -303,9 +299,9 @@ class qgis_backend:
                     trx_dlp_all = pd.concat(df_list, ignore_index=True)
                     if trx_dlp_all.empty != True:
                         return trx_dlp_all
-                    else:
+                    '''else:
                         print('These selected geomonsters: ' + str(values) + \
-                            ' do not contain any trx_dlp.')
+                            ' do not contain any trx_dlp.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:
@@ -313,8 +309,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')
 
-    # Querying TRX_dlp_results
     def get_trx_dlp_result(self, gtm_ids):
+        """Querying TRX_dlp_results"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)): 
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
@@ -336,9 +332,9 @@ class qgis_backend:
                     trx_dlp_result_all = pd.concat(df_list, ignore_index=True)
                     if trx_dlp_result_all.empty != True:
                         return trx_dlp_result_all
-                    else:
+                    '''else:
                         print('These selected boring(en): ' + str(values) + \
-                            ' do not contain any trx_results.')
+                            ' do not contain any trx_results.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:
@@ -346,16 +342,17 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')   
 
-    # Filter on ea/strain
+    @staticmethod
     def select_on_ea(self, trx_result, ea=2):
+        """Filter on ea/strain"""
         if isinstance(trx_result, pd.DataFrame):
             new_trx_result_ea = trx_result[ea == trx_result.EA]
             return new_trx_result_ea
         else:
             raise TypeError('No pandas dataframe was supplied')
 
-    # Calculating averages and standard deviations on TRX_results
     def get_average_per_ea(self, df_trx_result, ea=5):
+        """Calculating averages and standard deviations on TRX_results"""
         if isinstance(df_trx_result, pd.DataFrame):
             df_trx_temp = self.select_on_ea(df_trx_result, ea)
             mean_coh = round(np.mean(df_trx_temp['COH']), 1)
@@ -367,7 +364,6 @@ class qgis_backend:
         else:
             raise TypeError('No pandas dataframe was supplied.')
 
-    # Creating least square fits on TRX_dlp_results
     def get_least_squares(
         self,
         df_trx_dlp_result,
@@ -376,6 +372,8 @@ class qgis_backend:
         show_plot=True, 
         save_plot=False
         ):
+        """Creating least square fits on TRX_dlp_results"""
+
         df = self.select_on_ea( df_trx_dlp_result, ea)
         data_full = (df.P, df.Q)
         ### Begin Least Squares fitting van een 'linear regression'
@@ -467,8 +465,8 @@ class qgis_backend:
                 plt.show()
         return round(np.degrees(fi),1), round(coh,1), round(E), round(E_per_n,1), round(eps*100,1), N
 
-    # Querying compression tests\samendrukkingsproeven
     def get_sdp(self, gtm_ids):
+        """Querying compression tests\samendrukkingsproeven"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)): 
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):
@@ -490,9 +488,9 @@ class qgis_backend:
                     sdp_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_df_all.empty != True:
                         return sdp_df_all
-                    else:
-                        print('These selected boring(en): ' + str(values) + \
-                            ' do not contain any SDP_Proeven.')
+                    '''else:
+                        raise ValueError('These selected boring(en): ' + str(values) + \
+                            ' do not contain any SDP_Proeven.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:
@@ -500,8 +498,8 @@ class qgis_backend:
         else:
             raise TypeError('Input is not a list or tuple')   
 
-    # Querying sdp_results
     def get_sdp_result(self, gtm_ids):
+        """Querying sdp_results"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)):
             if len(gtm_ids) > 0: 
                 if all(isinstance(x, (int)) for x in gtm_ids):
@@ -523,9 +521,9 @@ class qgis_backend:
                     sdp_result_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_result_df_all.empty != True:
                         return sdp_result_df_all
-                    else:
-                        print('These selected boring(en): ' + str(values) + \
-                            ' do not contain any SDP_results.')
+                    '''else:
+                        raise ValueError('These selected boring(en): ' + str(values) + \
+                            ' do not contain any SDP_results.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:
