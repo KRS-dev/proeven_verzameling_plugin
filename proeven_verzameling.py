@@ -27,8 +27,9 @@ import numpy as np
 import xlwt
 import cx_Oracle
 
-from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis, QgsTask
+from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
+from qgis.PyQt.QtGui import QIcon, QRegExpValidator, QProgressDialog
 from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox
 
 # Initialize Qt resources from file resources.py
@@ -37,7 +38,7 @@ from .resources import *
 from .db_connect_dialog import dbconnectDialog
 from . import qgis_backend
 
-class dbconnect:
+class ProevenVerzameling:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -193,10 +194,10 @@ class dbconnect:
             # Initialize QGIS filewidget to select a directory
             self.dlg.fileWidget.setStorageMode(1)
             # Signalling the reset button.
-            self.dlg.buttonBox.button(QDialogButtonBox.Reset).clicked.connect(self.reset_ui)
+            self.dlg.buttonBox.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.reset_ui)
 
             # Signalling the Open button. Here the actual logic behind the plugin starts
-            self.dlg.buttonBox.button(QDialogButtonBox.Open).clicked.connect(self.get)
+            self.dlg.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.read_form)
             
             rx1 = QRegExp(r"^\[\d{1,2}(\.\d{1})?(?:,\d{1,2}(\.\d{1})?)+\]$")
             vg_validator = QRegExpValidator(rx1)
@@ -223,7 +224,7 @@ class dbconnect:
         # show the dialog
         self.dlg.show()
 
-    def get(self):
+    def read_form(self):
         ''' Extraction of info from the dialog form. 
             Checking credentials for the Oracle database connection.'''
         filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
@@ -238,28 +239,26 @@ class dbconnect:
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
         
-        
-        volG_sel_trx = [float(x) for x in volG_sel_trx]
-        volG_sel_sdp = [float(x) for x in volG_sel_sdp ]
+        volG_trx = self.dlg.le_vg_trx.lstrip('[').rstrip(']').split(',')
+        volG_sdp = self.dlg.le_vg_sdp.lstrip('[').rstrip(']').split(',')
+        volG_trx = [float(x) for x in volG_sel_trx]
+        volG_sdp = [float(x) for x in volG_sel_sdp]
         
         print(volG_sel_sdp, '\n', volG_sel_trx)
-        args = {'selected_layer' : selected_layer,
-                'CU' : CU, 'CD' : CD, 'UU' : UU,
-                'ea' : ea,
-                'show_plot' : show_plot,
-                'output_location' : output_location, 'output_name' : output_name
+        args = {'selected_layer': selected_layer,
+                'CU': CU, 'CD': CD, 'UU': UU,
+                'ea': ea,
+                'show_plot': show_plot,
+                'output_location': output_location, 'output_name': output_name,
+                'volG_sdp': volG_sdp, 'volG_trx': volG_trx
                 }
                 
         if filter_on_height:
-            maxH = self.dlg.sb_maxHeight.value()
-            minH = self.dlg.sb_minHeight.value()
-            args['maxH'] = maxH
-            args['minH'] = minH
+            args['maxH'] = self.dlg.sb_maxHeight.value()
+            args['minH'] = self.dlg.sb_minHeight.value()
         if filter_on_volumetric_weight:
-            maxVg = self.dlg.sb_maxVolumetricWeight.value()
-            minVg = self.dlg.sb_minVolumetricWeight.value()
-            args['maxVg'] = maxVg
-            args['minVg'] = minVg
+            args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
+            args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
         
         settings = QSettings()
         allkeys = settings.allKeys()
@@ -313,6 +312,16 @@ class dbconnect:
                 args['qb'] = qb
                 self.qgis_frontend(**args)
 
+    def run_task(self, args):
+        progressDialog = QProgressDialog('Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
+        progressDialog.show()
+        task = ProevenVerzamelingTask(iface=self.iface, args=args)
+        task.progressChanged.connect(progressDialog.setValue(task.progress()))
+        progressDialog.canceled.connect(task.cancel)
+        task.begun.connect(progressDialog.setLabelText('Task Running: BIS Bevraging...'))
+        QgsApplication.taskManager().addTask(task)
+        
+        
     def reset_ui(self):
         '''Reset all inputs to default values in the GUI'''
         self.dlg.cb_filterOnHeight.setChecked(False)
@@ -518,10 +527,11 @@ class dbconnect:
 
         os.startfile(output_file_dir)
 
-class dbconnect_Task(QgsTask):
+class ProevenVerzamelingTask(QgsTask):
     """Creating a task to run all the heavy processes in the background on a different thread"""
 
-    def __init__(self, iface, args):
+    def __init__(self, description, iface, args):
+        super().__init__(description, QgsTask.CanCancel)
         self.iface = iface
         self.args = args
         self.exception = None
@@ -534,8 +544,11 @@ class dbconnect_Task(QgsTask):
         can therefore raise exceptions.
         """
         try:
-            self.get_data(self.args)
-            return True
+            success = self.get_data(self.args)
+            if success:
+                return True
+            else:
+                return False
         except Exception as e:
             self.exception = e
             return False
@@ -604,10 +617,10 @@ class dbconnect_Task(QgsTask):
             proef_types.append('UU')
         
         rek_selectie = [ea]
-        output_file = output_name + '.xls'
+        output_file = output_name + '.xlsx'
 
         # Check if the directory still has to be made.
-        if os.path.isdir(output_location) == False:
+        if os.path.isdir(output_location) is False:
             os.mkdir(output_location)
 
         # Extract the loc ids from the selected points in the selected layer
@@ -727,7 +740,7 @@ class dbconnect_Task(QgsTask):
             output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
-        with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer: #writer in append mode so that the NEN tables are kept
+        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer: ### untrue: writer in append mode so that the NEN tables are kept
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key)

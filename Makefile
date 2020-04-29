@@ -38,15 +38,15 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	db_connect.py db_connect_dialog.py qgis_backend.py
+	proeven_verzameling.py proeven_verzameling_dialog.py qgis_backend.py
 
-PLUGINNAME = db_connect
+PLUGINNAME = proeven_verzameling
 
 PY_FILES = \
 	__init__.py \
-	db_connect.py db_connect_dialog.py qgis_backend.py
+	proeven_verzameling.py proeven_verzameling_dialog.py qgis_backend.py
 
-UI_FILES = db_connect_dialog_base.ui
+UI_FILES = proeven_verzameling_dialog_base.ui
 
 EXTRAS = metadata.txt icon.png
 

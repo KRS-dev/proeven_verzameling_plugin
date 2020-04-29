@@ -1,6 +1,6 @@
 '''
 Script: qgis_backend.py
-Repository: https://github.com/KRS-dev/proeven_verzameling
+Repository: https://github.com/KRS-dev/proeven_verzameling_plugin
 Author: Kevin Schuurman
 E-mail: kevinschuurman98@gmail.com
 Summary: Base functions for qgis_frontend.py, Querying the data from the proeven verzameling database.
