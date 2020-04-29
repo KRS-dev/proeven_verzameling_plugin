@@ -649,7 +649,7 @@ class ProevenVerzamelingTask(QgsTask):
         if df_gm is not None:
             df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
             if df_gm_filt_on_z is None:
-                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH), level=Qgis.Critical, duration=5)
+                raise Error("There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
 
@@ -658,7 +658,7 @@ class ProevenVerzamelingTask(QgsTask):
             df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
         if df_sdp is not None:
             df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
-            df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
+            df_dict.update({'BIS_SDP_Proeven': df_sdp, 'BIS_SDP_Resultaten': df_sdp_result})
 
         if self.isCanceled():
             return False
