@@ -24,6 +24,7 @@
 import sys
 import os
 import traceback
+import time
 import pandas as pd
 import numpy as np
 import xlwt
@@ -581,6 +582,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.args = args
         self.exception = None
         self.traceback = None
+        self.duration = time.time()
 
     def run(self):
         """
@@ -611,6 +613,7 @@ class ProevenVerzamelingTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
+            self.duration = (time.time() - self.duration)/1000
             self.iface.messageBar().pushMessage(
                 'Task "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
@@ -689,7 +692,7 @@ class ProevenVerzamelingTask(QgsTask):
         if df_gm is not None:
             df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
             if df_gm_filt_on_z is None:
-                raise Error(
+                raise ValueError(
                     "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
@@ -723,7 +726,7 @@ class ProevenVerzamelingTask(QgsTask):
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
 
-                if volG_trx is not None:
+                if volG_trx is None:
                     # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
                     minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(
                         df_trx.VOLUMEGEWICHT_NAT)
