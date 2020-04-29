@@ -553,7 +553,7 @@ class ProevenVerzamelingTask(QgsTask):
         except Exception as e:
             self.exception = e
             return False
-    
+
     def finished(self):
         """
         This function is automatically called when the task has
@@ -570,8 +570,7 @@ class ProevenVerzamelingTask(QgsTask):
                     name=self.description(),
                     duration=self.duration),
                 Qgis.Info,
-                duration=3
-            )
+                duration=3)
         else:
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
@@ -580,8 +579,7 @@ class ProevenVerzamelingTask(QgsTask):
                     'canceled by the user)'.format(
                         name=self.description()),
                     Qgis.Warning,
-                    duration=3
-                )
+                    duration=3)
             else:
                 self.iface.messageBar().pushMessage(
                     'RandomTask "{name}" Exception: {exception}'.format(
@@ -594,7 +592,7 @@ class ProevenVerzamelingTask(QgsTask):
     def cancel(self):
         self.iface.messageBar().pushMessage(
             'Task "{name}" was canceled.'.format(
-                task=self.description())
+                task=self.description()),
             Qgis.Info, duration=3)
         super().cancel()
     
