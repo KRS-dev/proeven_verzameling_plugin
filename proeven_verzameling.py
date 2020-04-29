@@ -615,7 +615,7 @@ class ProevenVerzamelingTask(QgsTask):
         
         self.setProgress(0)
 
-        proef_types = [] # ['CU','CD','UU']
+        proef_types = []    # ['CU','CD','UU']
         if CU:
             proef_types.append('CU')
         if CD:
