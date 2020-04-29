@@ -238,8 +238,8 @@ class ProevenVerzameling:
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
         
-        volG_trx = self.dlg.le_vg_trx.text().lstrip('[').rstrip(']').split(',')
-        volG_sdp = self.dlg.le_vg_sdp.text().lstrip('[').rstrip(']').split(',')
+        volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+        volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
         volG_trx = [float(x) for x in volG_trx]
         volG_sdp = [float(x) for x in volG_sdp]
         
