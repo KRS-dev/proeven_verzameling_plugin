@@ -238,12 +238,21 @@ class ProevenVerzameling:
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
         
-        volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
-        volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
-        volG_trx = [float(x) for x in volG_trx]
-        volG_sdp = [float(x) for x in volG_sdp]
-        
-        print(volG_sdp, '\n', volG_trx)
+        if self.dlg.le_vg_trx.text():
+            volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+            volG_trx = [float(x) for x in volG_trx]
+            if len(volG_trx) < 2:
+                volG_trx = None
+        else:
+            volG_trx = None
+        if self.dlg.le_vg_sdp.text():
+            volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
+            volG_sdp = [float(x) for x in volG_sdp]
+            if len(volG_sdp) < 2:
+                volG_sdp = None
+        else:
+            volG_sdp = None
+
         args = {'selected_layer': selected_layer,
                 'CU': CU, 'CD': CD, 'UU': UU,
                 'ea': ea,
