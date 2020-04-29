@@ -21,7 +21,9 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys, os, traceback
+import sys
+import os
+import traceback
 import pandas as pd
 import numpy as np
 import xlwt
@@ -90,16 +92,16 @@ class ProevenVerzameling:
         return QCoreApplication.translate('ProevenVerzameling', message)
 
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -195,9 +197,11 @@ class ProevenVerzameling:
             # Initialize QGIS filewidget to select a directory
             self.dlg.fileWidget.setStorageMode(1)
             # Signalling the Open button. Here the actual logic behind the plugin starts
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.read_form)
+            self.dlg.buttonBox.button(
+                QDialogButtonBox.Ok).clicked.connect(self.read_form)
             # Signalling the reset button.
-            self.dlg.buttonBox.button(QDialogButtonBox.RestoreDefaults).clicked.connect(self.reset_ui)
+            self.dlg.buttonBox.button(
+                QDialogButtonBox.RestoreDefaults).clicked.connect(self.reset_ui)
             rx1 = QRegExp(r"^\[\d{1,2}(\.\d{1})?(?:,\d{1,2}(\.\d{1})?)+\]$")
             vg_validator = QRegExpValidator(rx1)
             self.dlg.le_vg_sdp.setValidator(vg_validator)
@@ -212,7 +216,7 @@ class ProevenVerzameling:
         allkeys = settings.allKeys()
         databases = [k for k in allkeys if 'database' in k]
         databaseNames = [settings.value(k) for k in databases]
-        # Holding on to the previous current index 
+        # Holding on to the previous current index
         cur_i = self.dlg.cmb_databases.currentIndex()
         self.dlg.cmb_databases.clear()
         self.dlg.cmb_databases.addItems(databaseNames)
@@ -237,16 +241,18 @@ class ProevenVerzameling:
         show_plot = self.dlg.cb_showPlot.isChecked()
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
-        
+
         if self.dlg.le_vg_trx.text():
-            volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+            volG_trx = self.dlg.le_vg_trx.text().strip(
+                '[').strip(']').split(',')
             volG_trx = [float(x) for x in volG_trx]
             if len(volG_trx) < 2:
                 volG_trx = None
         else:
             volG_trx = None
         if self.dlg.le_vg_sdp.text():
-            volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
+            volG_sdp = self.dlg.le_vg_sdp.text().strip(
+                '[').strip(']').split(',')
             volG_sdp = [float(x) for x in volG_sdp]
             if len(volG_sdp) < 2:
                 volG_sdp = None
@@ -260,14 +266,14 @@ class ProevenVerzameling:
                 'output_location': output_location, 'output_name': output_name,
                 'volG_sdp': volG_sdp, 'volG_trx': volG_trx
                 }
-                
+
         if filter_on_height:
             args['maxH'] = self.dlg.sb_maxHeight.value()
             args['minH'] = self.dlg.sb_minHeight.value()
         if filter_on_volumetric_weight:
             args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
             args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
-        
+
         settings = QSettings()
         allkeys = settings.allKeys()
         allvalues = [settings.value(k) for k in allkeys]
@@ -278,24 +284,31 @@ class ProevenVerzameling:
                     databasekey = key
         databasekey = databasekey.rstrip('database')
         selected_databasekeys = [k for k in allkeys if databasekey in k]
-        host = settings.value([k for k in selected_databasekeys if 'host' in k][0])
-        port = settings.value([k for k in selected_databasekeys if 'port' in k][0])
-        
-        saveUsername = settings.value([k for k in selected_databasekeys if 'saveUsername' in k][0], None)
-        savePassword = settings.value([k for k in selected_databasekeys if 'savePassword' in k][0], None)
+        host = settings.value(
+            [k for k in selected_databasekeys if 'host' in k][0])
+        port = settings.value(
+            [k for k in selected_databasekeys if 'port' in k][0])
+
+        saveUsername = settings.value(
+            [k for k in selected_databasekeys if 'saveUsername' in k][0], None)
+        savePassword = settings.value(
+            [k for k in selected_databasekeys if 'savePassword' in k][0], None)
         username = None
         password = None
         if saveUsername == 'true':
             saveUsername = True
-            username = settings.value([k for k in selected_databasekeys if 'username' in k][0], None)
+            username = settings.value(
+                [k for k in selected_databasekeys if 'username' in k][0], None)
         if savePassword == 'true':
             savePassword = True
-            password = settings.value([k for k in selected_databasekeys if 'password' in k][0], None)
-        
+            password = settings.value(
+                [k for k in selected_databasekeys if 'password' in k][0], None)
+
         errorMessage = None
         if saveUsername is True and savePassword is True:
             try:
-                qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=username, password=password)
+                qb = qgis_backend.qgis_backend(
+                    host=host, port=port, database=database, username=username, password=password)
                 qb.check_connection()
                 args['qb'] = qb
                 self.run_task(args)
@@ -304,16 +317,19 @@ class ProevenVerzameling:
                 errorMessage = errorObj.message
                 suc = 'false'
                 while suc == 'false':
-                    suc, qb, errorMessage = self.get_credentials(host, port, database, username=username, password=password, message=errorMessage)
+                    suc, qb, errorMessage = self.get_credentials(
+                        host, port, database, username=username, password=password, message=errorMessage)
                 if suc == 'exit':
                     pass
                 elif suc == 'true':
                     args['qb'] = qb
                     self.run_task(args)
         else:
-            suc, qb, errorMessage = self.get_credentials(host, port, database, username=username, password=password)
+            suc, qb, errorMessage = self.get_credentials(
+                host, port, database, username=username, password=password)
             while suc == 'false':
-                suc, qb, message = self.get_credentials(host, port, database, message=errorMessage)
+                suc, qb, message = self.get_credentials(
+                    host, port, database, message=errorMessage)
             if suc == 'exit':
                 pass
             elif suc == 'true':
@@ -321,14 +337,18 @@ class ProevenVerzameling:
                 self.run_task(args)
 
     def run_task(self, args):
-        progressDialog = QProgressDialog('Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
+        progressDialog = QProgressDialog(
+            'Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
         progressDialog.show()
-        task = ProevenVerzamelingTask('Proeven Verzameling Bevraging', self.iface, args)
-        task.progressChanged.connect(lambda: progressDialog.setValue(task.progress()))
+        task = ProevenVerzamelingTask(
+            'Proeven Verzameling Bevraging', self.iface, args)
+        task.progressChanged.connect(
+            lambda: progressDialog.setValue(task.progress()))
         progressDialog.canceled.connect(task.cancel)
-        task.begun.connect(lambda: progressDialog.setLabelText('Task Running: BIS Bevraging...'))
+        task.begun.connect(lambda: progressDialog.setLabelText(
+            'Task Running: BIS Bevraging...'))
         QgsApplication.taskManager().addTask(task)
-        
+
     def reset_ui(self):
         '''Reset all inputs to default values in the GUI'''
         self.dlg.cb_filterOnHeight.setChecked(False)
@@ -350,13 +370,15 @@ class ProevenVerzameling:
         # assign this information before you query the QgsCredentials data store
         uri.setConnection(host, port, database, username, password)
         connInfo = uri.connectionInfo()
-        
-        (success, user, passwd) = QgsCredentials.instance().get(connInfo, username, password, message)
+
+        (success, user, passwd) = QgsCredentials.instance().get(
+            connInfo, username, password, message)
         qb = None
         errorMessage = None
         if success:
             try:
-                qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=user, password=passwd)
+                qb = qgis_backend.qgis_backend(
+                    host=host, port=port, database=database, username=user, password=passwd)
                 qb.check_connection()
                 return 'true', qb, errorMessage
             except cx_Oracle.DatabaseError as e:
@@ -367,22 +389,22 @@ class ProevenVerzameling:
             return 'exit', qb, errorMessage
 
     def qgis_frontend(self,
-        qb,
-        selected_layer,
-        CU, CD, UU, ea,
-        show_plot,
-        output_location, output_name,
-        maxH=1000, minH=-1000, maxVg=40, minVg=0
-        ):
-        
-        proef_types = [] # ['CU','CD','UU']
+                      qb,
+                      selected_layer,
+                      CU, CD, UU, ea,
+                      show_plot,
+                      output_location, output_name,
+                      maxH=1000, minH=-1000, maxVg=40, minVg=0
+                      ):
+
+        proef_types = []  # ['CU','CD','UU']
         if CU:
             proef_types.append('CU')
         if CD:
             proef_types.append('CD')
         if UU:
             proef_types.append('UU')
-        
+
         rek_selectie = [ea]
         output_file = output_name + '.xls'
 
@@ -399,16 +421,19 @@ class ProevenVerzameling:
         if df_gm is not None:
             df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
             if df_gm_filt_on_z is None:
-                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH), level=Qgis.Critical, duration=5)
+                self.iface.messageBar().pushMessage("Error", "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(
+                    maxH, minH), level=Qgis.Critical, duration=5)
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
-        df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
+        df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
+                   'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
 
         df_sdp = qb.get_sdp(df_gm_filt_on_z.GTM_ID)
         if df_sdp is not None:
             df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
         if df_sdp is not None:
             df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
-            df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
+            df_dict.update({'BIS_SDP_Proeven': df_sdp,
+                            'BIS_SDP_Resultaten': df_sdp_result})
 
         df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
         if df_trx is not None:
@@ -418,16 +443,18 @@ class ProevenVerzameling:
             df_trx_results = qb.get_trx_result(df_trx.GTM_ID)
             df_trx_dlp = qb.get_trx_dlp(df_trx.GTM_ID)
             df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.GTM_ID)
-            df_dict.update({'BIS_TRX_Proeven':df_trx, 'BIS_TRX_Results':df_trx_results, 'BIS_TRX_DLP':df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
+            df_dict.update({'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
+                            'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
             df_bbn_stat_dict = {}
             df_vg_stat_dict = {}
             df_lst_sqrs_dict = {}
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
-                ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
+                # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+                minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(
+                    df_trx.VOLUMEGEWICHT_NAT)
                 N = round(len(df_trx.index)/5) + 1
-                cutoff = 1 # The interval cant be lower than 1 kn/m3
+                cutoff = 1  # The interval cant be lower than 1 kn/m3
                 if (maxvg-minvg)/N > cutoff:
                     Vg_linspace = np.linspace(minvg, maxvg, N)
                 else:
@@ -436,66 +463,72 @@ class ProevenVerzameling:
                         Vg_linspace = np.linspace(minvg, maxvg, 2)
                     else:
                         Vg_linspace = np.linspace(minvg, maxvg, N)
-                
+
                 Vgmax = Vg_linspace[1:]
                 Vgmin = Vg_linspace[0:-1]
 
-                
                 for ea in rek_selectie:
                     ls_list = []
                     avg_list = []
                     for vg_max, vg_min in zip(Vgmax, Vgmin):
                         # Make a selection for this volumetric weight interval
-                        gtm_ids = qb.select_on_vg(df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
+                        gtm_ids = qb.select_on_vg(
+                            df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
                         if len(gtm_ids) > 0:
                             # Create a tag for this particular volumetric weight interval
-                            key = 'Vg: ' + str(round(vg_min, 1)) + '-' + str(round(vg_max, 1)) + ' kN/m3'
+                            key = 'Vg: ' + str(round(vg_min, 1)) + \
+                                '-' + str(round(vg_max, 1)) + ' kN/m3'
                             # Get the related TRX results...
                             #
-                            ## Potentially the next line could be done without querying the database again
-                            ## for the data that is already availabe in the variable df_trx_results
-                            ## but I have not found the right type of filter methods in Pandas which
-                            ## can replicate the SQL filters
+                            # Potentially the next line could be done without querying the database again
+                            # for the data that is already availabe in the variable df_trx_results
+                            # but I have not found the right type of filter methods in Pandas which
+                            # can replicate the SQL filters
                             #
                             df_trx_results_temp = qb.get_trx_result(gtm_ids)
                             # Calculate the averages and standard deviation of fi and coh for different strain types and add them to a dataframe list
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
-                            df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
+                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
+                                df_trx_results_temp, ea)
+                            df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],
+                                                       columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
                             avg_list.append(df_avg_temp)
                             # Calculate the least squares estimate of the S en T and add them to a dataframe list
                             fi, coh, E, E_per_n, eps, N = qb.get_least_squares(
                                 qb.get_trx_dlp_result(gtm_ids),
                                 ea=ea,
-                                plot_name='Least Squares Analysis, ea: ' + str(ea) + '\n' + key,
+                                plot_name='Least Squares Analysis, ea: ' +
+                                str(ea) + '\n' + key,
                                 show_plot=show_plot
-                                )
-                            df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],\
-                                columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
+                            )
+                            df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
+                                                       columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
                             ls_list.append(df_lst_temp)
                     if len(ls_list) > 0:
                         df_ls_stat = pd.concat(ls_list)
-                        df_ls_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_lst_sqrs_dict.update({str(ea) + r'% rek least squares fit':df_ls_stat})
+                        df_ls_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_lst_sqrs_dict.update(
+                            {str(ea) + r'% rek least squares fit': df_ls_stat})
                     if len(avg_list) > 0:
                         df_avg_stat = pd.concat(avg_list)
-                        df_avg_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_vg_stat_dict.update({str(ea) + r'% rek gemiddelde fit':df_avg_stat})
+                        df_avg_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_vg_stat_dict.update(
+                            {str(ea) + r'% rek gemiddelde fit': df_avg_stat})
 
-                
                 for ea in rek_selectie:
                     bbn_list = []
                     for bbn_code in pd.unique(df_trx.BBN_KODE):
                         gtm_ids = df_trx[df_trx.BBN_KODE == bbn_code].GTM_ID
                         if len(gtm_ids > 0):
                             df_trx_results_temp = qb.get_trx_result(gtm_ids)
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
-                            bbn_list.append(pd.DataFrame(index = [bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
-                    if len(bbn_list) > 0:        
+                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
+                                df_trx_results_temp, ea)
+                            bbn_list.append(pd.DataFrame(index=[bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],
+                                                         columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
+                    if len(bbn_list) > 0:
                         df_bbn_stat = pd.concat(bbn_list)
-                        df_bbn_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_bbn_stat_dict.update({str(ea) + r'% rek per BBN code':df_bbn_stat})
+                        df_bbn_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_bbn_stat_dict.update(
+                            {str(ea) + r'% rek per BBN code': df_bbn_stat})
 
         # Check if the .xlsx file exists
         output_file_dir = os.path.join(output_location, output_file)
@@ -504,33 +537,37 @@ class ProevenVerzameling:
             i = 1
             while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
+            output_file_dir = os.path.join(
+                output_location, name + '{}.'.format(i) + ext)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
-        with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer: #writer in append mode so that the NEN tables are kept
+        # writer in append mode so that the NEN tables are kept
+        with pd.ExcelWriter(output_file_dir, engine='xlwt', mode='w') as writer:
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key)
-                
+
             if df_trx is not None:
                 # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
                 if df_vg_stat_dict:
                     row = 0
                     for key in df_vg_stat_dict:
-                        df_vg_stat_dict[key].to_excel(writer, sheet_name='Simpele Vg stat.', startrow=row)
+                        df_vg_stat_dict[key].to_excel(
+                            writer, sheet_name='Simpele Vg stat.', startrow=row)
                         row = row + len(df_vg_stat_dict[key].index) + 2
                 # Repeat...
                 if df_lst_sqrs_dict:
                     row = 0
                     for key in df_lst_sqrs_dict:
-                        df_lst_sqrs_dict[key].to_excel(writer, sheet_name='Least Squares Vg Stat.', startrow=row)
+                        df_lst_sqrs_dict[key].to_excel(
+                            writer, sheet_name='Least Squares Vg Stat.', startrow=row)
                         row = row + len(df_lst_sqrs_dict[key].index) + 2
                 if df_bbn_stat_dict:
                     row = 0
                     for key in df_bbn_stat_dict:
-                        df_bbn_stat_dict[key].to_excel(writer, sheet_name='bbn_kode Stat.', startrow=row)
+                        df_bbn_stat_dict[key].to_excel(
+                            writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
-                
 
         os.startfile(output_file_dir)
 
@@ -583,8 +620,8 @@ class ProevenVerzamelingTask(QgsTask):
         else:
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
-                    'RandomTask "{name}" not successful but without '\
-                    'exception (probably the task was manually '\
+                    'RandomTask "{name}" not successful but without '
+                    'exception (probably the task was manually '
                     'canceled by the user)'.format(
                         name=self.description()),
                     Qgis.Warning,
@@ -598,24 +635,24 @@ class ProevenVerzamelingTask(QgsTask):
                     Qgis.Critical,
                     duration=10)
                 raise self.exception
-    
+
     def cancel(self):
         self.iface.messageBar().pushMessage(
             'Task "{name}" was canceled.'.format(
                 task=self.description()),
             Qgis.Info, duration=3)
         super().cancel()
-    
+
     def get_data(self,
-        qb,
-        selected_layer,
-        CU, CD, UU, ea,
-        show_plot,
-        output_location, output_name,
-        volG_sdp, volG_trx,
-        maxH=1000, minH=-1000, maxVg=40, minVg=0
-        ):
-        
+                 qb,
+                 selected_layer,
+                 CU, CD, UU, ea,
+                 show_plot,
+                 output_location, output_name,
+                 volG_sdp, volG_trx,
+                 maxH=1000, minH=-1000, maxVg=40, minVg=0
+                 ):
+
         self.setProgress(0)
 
         proef_types = []    # ['CU','CD','UU']
@@ -625,7 +662,7 @@ class ProevenVerzamelingTask(QgsTask):
             proef_types.append('CD')
         if UU:
             proef_types.append('UU')
-        
+
         rek_selectie = [ea]
         output_file = output_name + '.xlsx'
 
@@ -652,16 +689,19 @@ class ProevenVerzamelingTask(QgsTask):
         if df_gm is not None:
             df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
             if df_gm_filt_on_z is None:
-                raise Error("There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
+                raise Error(
+                    "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
-        df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers':df_geod, 'BIS_Geotechnische_Monsters':df_gm_filt_on_z}
+        df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
+                   'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
 
         df_sdp = qb.get_sdp(df_gm_filt_on_z.GTM_ID)
         if df_sdp is not None:
             df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
         if df_sdp is not None:
             df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
-            df_dict.update({'BIS_SDP_Proeven': df_sdp, 'BIS_SDP_Resultaten': df_sdp_result})
+            df_dict.update({'BIS_SDP_Proeven': df_sdp,
+                            'BIS_SDP_Resultaten': df_sdp_result})
 
         if self.isCanceled():
             return False
@@ -675,18 +715,20 @@ class ProevenVerzamelingTask(QgsTask):
             df_trx_results = qb.get_trx_result(df_trx.GTM_ID)
             df_trx_dlp = qb.get_trx_dlp(df_trx.GTM_ID)
             df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.GTM_ID)
-            df_dict.update({'BIS_TRX_Proeven':df_trx, 'BIS_TRX_Results':df_trx_results, 'BIS_TRX_DLP':df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
+            df_dict.update({'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
+                            'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
             df_bbn_stat_dict = {}
             df_vg_stat_dict = {}
             df_lst_sqrs_dict = {}
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
-                
+
                 if volG_trx is not None:
-                    ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                    minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
+                    # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+                    minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(
+                        df_trx.VOLUMEGEWICHT_NAT)
                     N = round(len(df_trx.index) / 5) + 1
-                    cutoff = 1 # The interval cant be lower than 1 kn/m3
+                    cutoff = 1  # The interval cant be lower than 1 kn/m3
                     if (maxvg-minvg)/N > cutoff:
                         Vg_linspace = np.linspace(minvg, maxvg, N)
                     else:
@@ -695,7 +737,7 @@ class ProevenVerzamelingTask(QgsTask):
                             Vg_linspace = np.linspace(minvg, maxvg, 2)
                         else:
                             Vg_linspace = np.linspace(minvg, maxvg, N)
-                    
+
                     Vgmax = Vg_linspace[1:]
                     Vgmin = Vg_linspace[0:-1]
                 else:
@@ -711,59 +753,67 @@ class ProevenVerzamelingTask(QgsTask):
                     avg_list = []
                     for vg_max, vg_min in zip(Vgmax, Vgmin):
                         # Make a selection for this volumetric weight interval
-                        gtm_ids = qb.select_on_vg(df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
+                        gtm_ids = qb.select_on_vg(
+                            df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
                         if len(gtm_ids) > 0:
                             # Create a tag for this particular volumetric weight interval
-                            key = 'Vg: ' + str(round(vg_min, 1)) + '-' + str(round(vg_max, 1)) + ' kN/m3'
+                            key = 'Vg: ' + str(round(vg_min, 1)) + \
+                                '-' + str(round(vg_max, 1)) + ' kN/m3'
                             # Get the related TRX results...
                             #
-                            ## Potentially the next line could be done without querying the database again
-                            ## for the data that is already availabe in the variable df_trx_results
-                            ## but I have not found the right type of filter methods in Pandas which
-                            ## can replicate the SQL filters
+                            # Potentially the next line could be done without querying the database again
+                            # for the data that is already availabe in the variable df_trx_results
+                            # but I have not found the right type of filter methods in Pandas which
+                            # can replicate the SQL filters
                             #
                             df_trx_results_temp = qb.get_trx_result(gtm_ids)
                             # Calculate the averages and standard deviation of fi and coh for different strain types and add them to a dataframe list
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
-                            df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
+                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
+                                df_trx_results_temp, ea)
+                            df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],
+                                                       columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
                             avg_list.append(df_avg_temp)
                             # Calculate the least squares estimate of the S en T and add them to a dataframe list
                             fi, coh, E, E_per_n, eps, N = qb.get_least_squares(
                                 qb.get_trx_dlp_result(gtm_ids),
                                 ea=ea,
-                                plot_name='Least Squares Analysis, ea: ' + str(ea) + '\n' + key,
+                                plot_name='Least Squares Analysis, ea: ' +
+                                str(ea) + '\n' + key,
                                 show_plot=show_plot
-                                )
-                            df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],\
-                                columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
+                            )
+                            df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
+                                                       columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
                             ls_list.append(df_lst_temp)
                     if len(ls_list) > 0:
                         df_ls_stat = pd.concat(ls_list)
-                        df_ls_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_lst_sqrs_dict.update({str(ea) + r'% rek least squares fit':df_ls_stat})
+                        df_ls_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_lst_sqrs_dict.update(
+                            {str(ea) + r'% rek least squares fit': df_ls_stat})
                     if len(avg_list) > 0:
                         df_avg_stat = pd.concat(avg_list)
-                        df_avg_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_vg_stat_dict.update({str(ea) + r'% rek gemiddelde fit':df_avg_stat})
+                        df_avg_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_vg_stat_dict.update(
+                            {str(ea) + r'% rek gemiddelde fit': df_avg_stat})
 
                 if self.isCanceled():
                     return False
-                self.setProgress(80)             
-                
+                self.setProgress(80)
+
                 for ea in rek_selectie:
                     bbn_list = []
                     for bbn_code in pd.unique(df_trx.BBN_KODE):
                         gtm_ids = df_trx[df_trx.BBN_KODE == bbn_code].GTM_ID
                         if len(gtm_ids > 0):
                             df_trx_results_temp = qb.get_trx_result(gtm_ids)
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(df_trx_results_temp, ea)
-                            bbn_list.append(pd.DataFrame(index = [bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],\
-                                columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
-                    if len(bbn_list) > 0:        
+                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
+                                df_trx_results_temp, ea)
+                            bbn_list.append(pd.DataFrame(index=[bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],
+                                                         columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
+                    if len(bbn_list) > 0:
                         df_bbn_stat = pd.concat(bbn_list)
-                        df_bbn_stat.index.name = 'ea: ' + str(ea) +'%'
-                        df_bbn_stat_dict.update({str(ea) + r'% rek per BBN code':df_bbn_stat})
+                        df_bbn_stat.index.name = 'ea: ' + str(ea) + '%'
+                        df_bbn_stat_dict.update(
+                            {str(ea) + r'% rek per BBN code': df_bbn_stat})
 
         # Check if the .xlsx file exists
         output_file_dir = os.path.join(output_location, output_file)
@@ -772,40 +822,43 @@ class ProevenVerzamelingTask(QgsTask):
             i = 1
             while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
+            output_file_dir = os.path.join(
+                output_location, name + '{}.'.format(i) + ext)
 
         if self.isCanceled():
             return False
         self.setProgress(90)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
-        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer: ### untrue: writer in append mode so that the NEN tables are kept
+        # untrue: writer in append mode so that the NEN tables are kept
+        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key)
-                
+
             if df_trx is not None:
                 # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
                 if df_vg_stat_dict:
                     row = 0
                     for key in df_vg_stat_dict:
-                        df_vg_stat_dict[key].to_excel(writer, sheet_name='Simpele Vg stat.', startrow=row)
+                        df_vg_stat_dict[key].to_excel(
+                            writer, sheet_name='Simpele Vg stat.', startrow=row)
                         row = row + len(df_vg_stat_dict[key].index) + 2
                 # Repeat...
                 if df_lst_sqrs_dict:
                     row = 0
                     for key in df_lst_sqrs_dict:
-                        df_lst_sqrs_dict[key].to_excel(writer, sheet_name='Least Squares Vg Stat.', startrow=row)
+                        df_lst_sqrs_dict[key].to_excel(
+                            writer, sheet_name='Least Squares Vg Stat.', startrow=row)
                         row = row + len(df_lst_sqrs_dict[key].index) + 2
                 if df_bbn_stat_dict:
                     row = 0
                     for key in df_bbn_stat_dict:
-                        df_bbn_stat_dict[key].to_excel(writer, sheet_name='bbn_kode Stat.', startrow=row)
+                        df_bbn_stat_dict[key].to_excel(
+                            writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
-                
+
         os.startfile(output_file_dir)
         self.setProgress(100)
         return True
-
-
 
