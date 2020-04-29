@@ -59,7 +59,7 @@ class ProevenVerzameling:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'ProvenVerzameling_{}.qm'.format(locale))
+            'ProevenVerzameling_{}.qm'.format(locale))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
