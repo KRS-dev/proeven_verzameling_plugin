@@ -38,6 +38,7 @@ from .resources import *
 from .db_connect_dialog import dbconnectDialog
 from . import qgis_backend
 
+
 class ProevenVerzameling:
     """QGIS Plugin Implementation."""
 
@@ -321,7 +322,6 @@ class ProevenVerzameling:
         task.begun.connect(progressDialog.setLabelText('Task Running: BIS Bevraging...'))
         QgsApplication.taskManager().addTask(task)
         
-        
     def reset_ui(self):
         '''Reset all inputs to default values in the GUI'''
         self.dlg.cb_filterOnHeight.setChecked(False)
@@ -527,6 +527,7 @@ class ProevenVerzameling:
 
         os.startfile(output_file_dir)
 
+
 class ProevenVerzamelingTask(QgsTask):
     """Creating a task to run all the heavy processes in the background on a different thread"""
 
@@ -544,8 +545,8 @@ class ProevenVerzamelingTask(QgsTask):
         can therefore raise exceptions.
         """
         try:
-            success = self.get_data(self.args)
-            if success:
+            result = self.get_data(self.args)
+            if result:
                 return True
             else:
                 return False
@@ -625,9 +626,19 @@ class ProevenVerzamelingTask(QgsTask):
 
         # Extract the loc ids from the selected points in the selected layer
         loc_ids = qb.get_loc_ids(selected_layer)
+
+        if self.isCanceled():
+            return False        
+        self.setProgress(10)
+
         # Get all meetpunten related to these loc_ids
         df_meetp = qb.get_meetpunten(loc_ids)
         df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
+
+        if self.isCanceled():
+            return False        
+        self.setProgress(20)
+
         df_gm = qb.get_geotech_monsters(loc_ids)
         if df_gm is not None:
             df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
@@ -642,6 +653,10 @@ class ProevenVerzamelingTask(QgsTask):
         if df_sdp is not None:
             df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
             df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
+
+        if self.isCanceled():
+            return False        
+        self.setProgress(35)
 
         df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
         if df_trx is not None:
@@ -659,7 +674,7 @@ class ProevenVerzamelingTask(QgsTask):
             if len(df_trx.index) > 1:
                 ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
                 minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
-                N = round(len(df_trx.index)/5) + 1
+                N = round(len(df_trx.index) / 5) + 1
                 cutoff = 1 # The interval cant be lower than 1 kn/m3
                 if (maxvg-minvg)/N > cutoff:
                     Vg_linspace = np.linspace(minvg, maxvg, N)
@@ -673,7 +688,10 @@ class ProevenVerzamelingTask(QgsTask):
                 Vgmax = Vg_linspace[1:]
                 Vgmin = Vg_linspace[0:-1]
 
-                
+                if self.isCanceled():
+                    return False        
+                self.setProgress(40)
+
                 for ea in rek_selectie:
                     ls_list = []
                     avg_list = []
@@ -715,6 +733,9 @@ class ProevenVerzamelingTask(QgsTask):
                         df_avg_stat.index.name = 'ea: ' + str(ea) +'%'
                         df_vg_stat_dict.update({str(ea) + r'% rek gemiddelde fit':df_avg_stat})
 
+                if self.isCanceled():
+                    return False        
+                self.setProgress(80)             
                 
                 for ea in rek_selectie:
                     bbn_list = []
@@ -738,6 +759,10 @@ class ProevenVerzamelingTask(QgsTask):
             while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
                 i += 1
             output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
+
+        if self.isCanceled():
+            return False        
+        self.setProgress(90)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer: ### untrue: writer in append mode so that the NEN tables are kept
@@ -764,8 +789,9 @@ class ProevenVerzamelingTask(QgsTask):
                         df_bbn_stat_dict[key].to_excel(writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
                 
-
         os.startfile(output_file_dir)
+        self.setProgress(100)
+        return True
 
 
 
