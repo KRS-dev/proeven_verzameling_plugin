@@ -238,12 +238,12 @@ class ProevenVerzameling:
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
         
-        volG_trx = self.dlg.le_vg_trx.lstrip('[').rstrip(']').split(',')
-        volG_sdp = self.dlg.le_vg_sdp.lstrip('[').rstrip(']').split(',')
-        volG_trx = [float(x) for x in volG_sel_trx]
-        volG_sdp = [float(x) for x in volG_sel_sdp]
+        volG_trx = self.dlg.le_vg_trx.text().lstrip('[').rstrip(']').split(',')
+        volG_sdp = self.dlg.le_vg_sdp.text().lstrip('[').rstrip(']').split(',')
+        volG_trx = [float(x) for x in volG_trx]
+        volG_sdp = [float(x) for x in volG_sdp]
         
-        print(volG_sel_sdp, '\n', volG_sel_trx)
+        print(volG_sdp, '\n', volG_trx)
         args = {'selected_layer': selected_layer,
                 'CU': CU, 'CD': CD, 'UU': UU,
                 'ea': ea,
@@ -289,7 +289,7 @@ class ProevenVerzameling:
                 qb = qgis_backend.qgis_backend(host=host, port=port, database=database, username=username, password=password)
                 qb.check_connection()
                 args['qb'] = qb
-                self.qgis_frontend(**args)
+                self.run_task(args)
             except cx_Oracle.DatabaseError as e:
                 errorObj, = e.args
                 errorMessage = errorObj.message
@@ -300,7 +300,7 @@ class ProevenVerzameling:
                     pass
                 elif suc == 'true':
                     args['qb'] = qb
-                    self.qgis_frontend(**args)
+                    self.run_task(args)
         else:
             suc, qb, errorMessage = self.get_credentials(host, port, database, username=username, password=password)
             while suc == 'false':
@@ -309,7 +309,7 @@ class ProevenVerzameling:
                 pass
             elif suc == 'true':
                 args['qb'] = qb
-                self.qgis_frontend(**args)
+                self.run_task(args)
 
     def run_task(self, args):
         progressDialog = QProgressDialog('Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
@@ -543,7 +543,7 @@ class ProevenVerzamelingTask(QgsTask):
         can therefore raise exceptions.
         """
         try:
-            result = self.get_data(self.args)
+            result = self.get_data(**self.args)
             if result:
                 return True
             else:
@@ -600,6 +600,7 @@ class ProevenVerzamelingTask(QgsTask):
         CU, CD, UU, ea,
         show_plot,
         output_location, output_name,
+        volG_sdp, volG_trx,
         maxH=1000, minH=-1000, maxVg=40, minVg=0
         ):
         
@@ -624,7 +625,7 @@ class ProevenVerzamelingTask(QgsTask):
         loc_ids = qb.get_loc_ids(selected_layer)
 
         if self.isCanceled():
-            return False        
+            return False
         self.setProgress(10)
 
         # Get all meetpunten related to these loc_ids
@@ -632,7 +633,7 @@ class ProevenVerzamelingTask(QgsTask):
         df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
 
         if self.isCanceled():
-            return False        
+            return False
         self.setProgress(20)
 
         df_gm = qb.get_geotech_monsters(loc_ids)
@@ -651,7 +652,7 @@ class ProevenVerzamelingTask(QgsTask):
             df_dict.update({'BIS_SDP_Proeven':df_sdp, 'BIS_SDP_Resultaten':df_sdp_result})
 
         if self.isCanceled():
-            return False        
+            return False
         self.setProgress(35)
 
         df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
@@ -668,24 +669,29 @@ class ProevenVerzamelingTask(QgsTask):
             df_lst_sqrs_dict = {}
             # Doing statistics on the select TRX proeven
             if len(df_trx.index) > 1:
-                ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
-                N = round(len(df_trx.index) / 5) + 1
-                cutoff = 1 # The interval cant be lower than 1 kn/m3
-                if (maxvg-minvg)/N > cutoff:
-                    Vg_linspace = np.linspace(minvg, maxvg, N)
-                else:
-                    N = round((maxvg-minvg)/cutoff)
-                    if N < 2:
-                        Vg_linspace = np.linspace(minvg, maxvg, 2)
-                    else:
-                        Vg_linspace = np.linspace(minvg, maxvg, N)
                 
-                Vgmax = Vg_linspace[1:]
-                Vgmin = Vg_linspace[0:-1]
+                if volG_trx is not None:
+                    ## Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+                    minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(df_trx.VOLUMEGEWICHT_NAT)
+                    N = round(len(df_trx.index) / 5) + 1
+                    cutoff = 1 # The interval cant be lower than 1 kn/m3
+                    if (maxvg-minvg)/N > cutoff:
+                        Vg_linspace = np.linspace(minvg, maxvg, N)
+                    else:
+                        N = round((maxvg-minvg)/cutoff)
+                        if N < 2:
+                            Vg_linspace = np.linspace(minvg, maxvg, 2)
+                        else:
+                            Vg_linspace = np.linspace(minvg, maxvg, N)
+                    
+                    Vgmax = Vg_linspace[1:]
+                    Vgmin = Vg_linspace[0:-1]
+                else:
+                    Vgmax = volG_trx[1:]
+                    Vgmin = volG_trx[0:-1]
 
                 if self.isCanceled():
-                    return False        
+                    return False
                 self.setProgress(40)
 
                 for ea in rek_selectie:
@@ -730,7 +736,7 @@ class ProevenVerzamelingTask(QgsTask):
                         df_vg_stat_dict.update({str(ea) + r'% rek gemiddelde fit':df_avg_stat})
 
                 if self.isCanceled():
-                    return False        
+                    return False
                 self.setProgress(80)             
                 
                 for ea in rek_selectie:
@@ -757,7 +763,7 @@ class ProevenVerzamelingTask(QgsTask):
             output_file_dir = os.path.join(output_location, name + '{}.'.format(i) + ext)
 
         if self.isCanceled():
-            return False        
+            return False
         self.setProgress(90)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
