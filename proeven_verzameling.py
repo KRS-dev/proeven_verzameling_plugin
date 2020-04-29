@@ -21,7 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys, os
+import sys, os, traceback
 import pandas as pd
 import numpy as np
 import xlwt
@@ -543,6 +543,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.iface = iface
         self.args = args
         self.exception = None
+        self.traceback = None
 
     def run(self):
         """
@@ -559,9 +560,10 @@ class ProevenVerzamelingTask(QgsTask):
                 return False
         except Exception as e:
             self.exception = e
+            self.traceback = traceback.format_exc()
             return False
 
-    def finished(self):
+    def finished(self, result):
         """
         This function is automatically called when the task has
         completed (successfully or not).
@@ -589,11 +591,12 @@ class ProevenVerzamelingTask(QgsTask):
                     duration=3)
             else:
                 self.iface.messageBar().pushMessage(
-                    'RandomTask "{name}" Exception: {exception}'.format(
+                    'RandomTask "{name}" Exception: {exception}, Traceback: {traceback}'.format(
                         name=self.description(),
-                        exception=self.exception),
+                        exception=self.exception,
+                        traceback=self.traceback),
                     Qgis.Critical,
-                    duration=6)
+                    duration=10)
                 raise self.exception
     
     def cancel(self):
