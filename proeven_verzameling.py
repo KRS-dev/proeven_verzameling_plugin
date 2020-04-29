@@ -324,9 +324,9 @@ class ProevenVerzameling:
         progressDialog = QProgressDialog('Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
         progressDialog.show()
         task = ProevenVerzamelingTask('Proeven Verzameling Bevraging', self.iface, args)
-        task.progressChanged.connect(progressDialog.setValue(task.progress()))
+        task.progressChanged.connect(lambda: progressDialog.setValue(task.progress()))
         progressDialog.canceled.connect(task.cancel)
-        task.begun.connect(progressDialog.setLabelText('Task Running: BIS Bevraging...'))
+        task.begun.connect(lambda: progressDialog.setLabelText('Task Running: BIS Bevraging...'))
         QgsApplication.taskManager().addTask(task)
         
     def reset_ui(self):
