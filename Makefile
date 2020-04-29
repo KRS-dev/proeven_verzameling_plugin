@@ -1,5 +1,5 @@
 #/***************************************************************************
-# dbconnect
+# ProevenVerzameling
 #
 # Queries chosen features to a database
 #							 -------------------
