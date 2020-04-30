@@ -771,8 +771,8 @@ class ProevenVerzamelingTask(QgsTask):
 
         if self.isCanceled():
             return False
-        self.setProgress(100)
         os.startfile(output_file_dir)
+        self.setProgress(100)
         return True
 
     def trx(self, gtm_ids):
