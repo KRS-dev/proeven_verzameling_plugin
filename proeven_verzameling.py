@@ -624,7 +624,7 @@ class ProevenVerzamelingTask(QgsTask):
         can therefore raise exceptions.
         """
         try:
-            result = self.get_data(**self.args)
+            result = self.get_data()
             if result:
                 return True
             else:
