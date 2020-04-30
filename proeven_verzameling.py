@@ -607,6 +607,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.minVg = kwargs.get('minVg', 0)
         
         self.trx_bool = kwargs.get('trx_bool', False)
+        print(self.trx_bool)
         if self.trx_bool:
             self.ea = kwargs.get('ea', [2])
             self.proef_types = kwargs.get('proef_types', ['CU'])
@@ -728,7 +729,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.setProgress(60)
 
         if self.sdp_bool:
-            dict_sdp = self.sdp(df_gm_filt_on_z)
+            dict_sdp = self.sdp(df_gm_filt_on_z.GTM_ID)
             df_dict.update(dict_sdp)
         
         if self.isCanceled():
