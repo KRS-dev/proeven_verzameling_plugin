@@ -751,25 +751,27 @@ class ProevenVerzamelingTask(QgsTask):
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key)
 
-                if self.trx_bool:
-                    # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
-                    if dict_lstsq_stat:
-                        row = 0
-                        for key in dict_lstsq_stat:
-                            dict_lstsq_stat[key].to_excel(
-                                writer, sheet_name='Least Squares Vg Stat.', startrow=row)
-                            row = row + len(dict_lstsq_stat[key].index) + 2
-                    if dict_bbn_stat:
-                        row = 0
-                        for key in dict_bbn_stat:
-                            dict_bbn_stat[key].to_excel(
-                                writer, sheet_name='bbn_kode Stat.', startrow=row)
-                            row = row + len(dict_bbn_stat[key].index) + 2
-                    if self.save_plot:
-                        i = 1
-                        for fig in fig_list:
-                            fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
-                            i = i + 1
+            self.setProgress(90)
+            
+            if self.trx_bool:
+                # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
+                if dict_lstsq_stat:
+                    row = 0
+                    for key in dict_lstsq_stat:
+                        dict_lstsq_stat[key].to_excel(
+                            writer, sheet_name='Least Squares Vg Stat.', startrow=row)
+                        row = row + len(dict_lstsq_stat[key].index) + 2
+                if dict_bbn_stat:
+                    row = 0
+                    for key in dict_bbn_stat:
+                        dict_bbn_stat[key].to_excel(
+                            writer, sheet_name='bbn_kode Stat.', startrow=row)
+                        row = row + len(dict_bbn_stat[key].index) + 2
+            if self.save_plot:
+                i = 1
+                for fig in fig_list:
+                    fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
+                    i = i + 1
 
         if self.isCanceled():
             return False
