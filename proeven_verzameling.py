@@ -864,7 +864,7 @@ class ProevenVerzamelingTask(QgsTask):
                             writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
 
-        for i, fig in fig_list:
+        for fig, i in fig_list, range(len(fig_list)):
             fig.savefig(os.path.join(output_location, 'fig_{i}.pdf'.format(i)))
 
         os.startfile(output_file_dir)
