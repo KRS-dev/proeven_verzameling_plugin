@@ -353,7 +353,7 @@ class ProevenVerzameling:
             'Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
         progressDialog.show()
         task = ProevenVerzamelingTask(
-            'Proeven Verzameling Bevraging', self.iface, args)
+            'Proeven Verzameling Bevraging', self.iface, **args)
         task.progressChanged.connect(
             lambda: progressDialog.setValue(task.progress()))
         progressDialog.canceled.connect(task.cancel)
