@@ -240,7 +240,7 @@ class ProevenVerzameling:
         CD = self.dlg.cb_CD.isChecked()
         UU = self.dlg.cb_UU.isChecked()
         ea = self.dlg.sb_strain.value()
-        show_plot = self.dlg.cb_showPlot.isChecked()
+        save_plot = self.dlg.cb_savePlot.isChecked()
         output_location = self.dlg.fileWidget.filePath()
         output_name = self.dlg.le_outputName.text()
 
@@ -264,7 +264,7 @@ class ProevenVerzameling:
         args = {'selected_layer': selected_layer,
                 'CU': CU, 'CD': CD, 'UU': UU,
                 'ea': ea,
-                'show_plot': show_plot,
+                'save_plot': save_plot,
                 'output_location': output_location, 'output_name': output_name,
                 'volG_sdp': volG_sdp, 'volG_trx': volG_trx
                 }
@@ -394,7 +394,7 @@ class ProevenVerzameling:
                       qb,
                       selected_layer,
                       CU, CD, UU, ea,
-                      show_plot,
+                      save_plot,
                       output_location, output_name,
                       maxH=1000, minH=-1000, maxVg=40, minVg=0
                       ):
@@ -500,7 +500,7 @@ class ProevenVerzameling:
                                 ea=ea,
                                 plot_name='Least Squares Analysis, ea: ' +
                                 str(ea) + '\n' + key,
-                                show_plot=show_plot
+                                save_plot=save_plot
                             )
                             df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
                                                        columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
@@ -651,7 +651,7 @@ class ProevenVerzamelingTask(QgsTask):
                  qb,
                  selected_layer,
                  CU, CD, UU, ea,
-                 show_plot,
+                 save_plot,
                  output_location, output_name,
                  volG_sdp, volG_trx,
                  maxH=1000, minH=-1000, maxVg=40, minVg=0
@@ -784,7 +784,7 @@ class ProevenVerzamelingTask(QgsTask):
                                 ea=ea,
                                 plot_name='Least Squares Analysis, ea: ' +
                                 str(ea) + '\n' + key,
-                                show_plot=show_plot
+                                save_plot=save_plot
                             )
                             fig_list.append(fig)
                             df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
@@ -863,10 +863,11 @@ class ProevenVerzamelingTask(QgsTask):
                         df_bbn_stat_dict[key].to_excel(
                             writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
-        i = 1
-        for fig in fig_list:
-            fig.savefig(os.path.join(output_location, 'fig_{}.pdf'.format(i)))
-            i = i + 1
+        if save_plot:
+            i = 1
+            for fig in fig_list:
+                fig.savefig(os.path.join(output_location, 'fig_{}.pdf'.format(i)))
+                i = i + 1
 
         os.startfile(output_file_dir)
         self.setProgress(100)

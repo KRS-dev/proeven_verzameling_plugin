@@ -503,7 +503,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="cb_showPlot">
+          <widget class="QCheckBox" name="cb_savePlot">
            <property name="toolTip">
             <string>Laat de grafieken voor de berekening van de statistiek zien.</string>
            </property>

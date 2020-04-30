@@ -403,8 +403,7 @@ class qgis_backend:
         df_trx_dlp_result,
         plot_name='Lst_Sqrs_name',
         ea=2,
-        show_plot=True,
-        save_plot=False
+        save_plot=True
     ):
         """Creating least square fits on TRX_dlp_results"""
 
@@ -435,7 +434,7 @@ class qgis_backend:
         eps = np.mean(y_res**2)/np.mean(y**2)
         # Einde Least Squares fitting
 
-        if show_plot:
+        if save_plot:
             dlp1, dlp2, dlp3 = df[(df.TDP_DEELPROEF_NUMMER == 1)], df[(
                 df.TDP_DEELPROEF_NUMMER == 2)], df[(df.TDP_DEELPROEF_NUMMER == 3)]
             data_colors = ((dlp1.P, dlp1.Q, dlp1.GTM_ID), (dlp2.P,
@@ -501,6 +500,8 @@ class qgis_backend:
             ax4.set_xlabel(r'$\sigma_n$ Normaalspanning')
 
             plt.tight_layout()
+        else:
+            fig = None
         return round(np.degrees(fi), 1), round(coh, 1), round(E), round(E_per_n, 1), round(eps*100, 1), N, fig
 
     def get_sdp(self, gtm_ids):
