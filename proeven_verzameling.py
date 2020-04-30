@@ -606,7 +606,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.maxVg = kwargs.get('maxVg', 40)
         self.minVg = kwargs.get('minVg', 0)
         
-        self.trx_bool = kwargs.get('trx_bool', False)
+        self.trx_bool = kwargs.get('trx_bool')
         print(self.trx_bool)
         if self.trx_bool:
             self.ea = kwargs.get('ea', [2])
@@ -614,7 +614,7 @@ class ProevenVerzamelingTask(QgsTask):
             self.volG_trx = kwargs.get('volG_trx')
             self.save_plot = kwargs.get('save_plot', False)
 
-        self.sdp_bool = kwargs.get('sdp_bool', False)
+        self.sdp_bool = kwargs.get('sdp_bool')
         if self.sdp_bool:
             self.volG_sdp = kwargs.get('volG_sdp')
 
