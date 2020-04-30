@@ -236,7 +236,8 @@ class ProevenVerzameling:
         database = self.dlg.cmb_databases.currentText()
         trx_bool = self.dlg.cb_TriaxiaalProeven.isChecked()
         sdp_bool = self.dlg.cb_SamendrukkingProeven.isChecked()
-        
+        output_location = self.dlg.fileWidget.filePath()
+        output_name = self.dlg.le_outputName.text()
         args = {'selected_layer': selected_layer,
                 'output_location': output_location, 'output_name': output_name,
                 }
@@ -257,8 +258,7 @@ class ProevenVerzameling:
             args['proef_types'] = proef_types
             args['ea'] = self.dlg.sb_strain.value()
             args['save_plot'] = self.dlg.cb_savePlot.isChecked()
-            args['output_location'] = self.dlg.fileWidget.filePath()
-            args['output_name'] = self.dlg.le_outputName.text()
+            
 
             if self.dlg.le_vg_trx.text():
                 volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
@@ -611,7 +611,7 @@ class ProevenVerzamelingTask(QgsTask):
             self.proef_types = kwargs.get('proef_types', ['CU'])
             self.volG_trx = kwargs.get('volG_trx')
             self.save_plot = kwargs.get('save_plot', False)
-            
+
         self.sdp_bool = kwargs.get('sdp_bool', False)
         if self.sdp_bool:
             self.volG_sdp = kwargs.get('volG_sdp')
@@ -648,7 +648,7 @@ class ProevenVerzamelingTask(QgsTask):
             self.iface.messageBar().pushMessage(
                 'Task "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
-                    duration=round(self.elapsedTime()/1000,2)),
+                    duration=round(self.elapsedTime()/1000, 2)),
                 Qgis.Info,
                 duration=3)
         else:
@@ -863,6 +863,6 @@ class ProevenVerzamelingTask(QgsTask):
         if df_sdp is not None:
             df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
             df_dict = {'BIS_SDP_Proeven': df_sdp,
-                        'BIS_SDP_Resultaten': df_sdp_result}
+                    'BIS_SDP_Resultaten': df_sdp_result}
         return df_dict
 
