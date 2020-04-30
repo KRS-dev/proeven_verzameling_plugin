@@ -464,8 +464,7 @@ class qgis_backend:
                         ax4.annotate(gtm_ids[i], xy=(
                             x2[i], y_res[i]), xycoords='data', weight='bold')
 
-            ax.plot([min(x), max(x)], [func(a, b, min(x)), func(
-                a, b, max(x))], c='black', label='least squares fit')
+            ax.plot([min(x), max(x)], [func(a, b, min(x)), func(a, b, max(x))], c='black', label='least squares fit')
             text = r'Line: $\tau = \sigma_n $* tan( ' + str(round(alpha, 3)) + r' ) + ' + str(round(b, 2)) \
                 + '\n' + r'$\alpha=' + str(round(alpha, 3)) + r', a=' + str(round(b, 2)) + r', \phi= $' + str(round(np.degrees(fi), 1)) + '\u00B0, C=' + str(round(coh, 2))\
                 + '\n' + 'Squared Error: ' + str(round(E, 1))\
@@ -502,7 +501,7 @@ class qgis_backend:
             ax4.set_xlabel(r'$\sigma_n$ Normaalspanning')
 
             plt.tight_layout()
-        return round(np.degrees(fi), 1), round(coh, 1), round(E), round(E_per_n, 1), round(eps*100, 1), N
+        return round(np.degrees(fi), 1), round(coh, 1), round(E), round(E_per_n, 1), round(eps*100, 1), N, fig
 
     def get_sdp(self, gtm_ids):
         """Querying compression tests\samendrukkingsproeven"""

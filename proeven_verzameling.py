@@ -753,6 +753,7 @@ class ProevenVerzamelingTask(QgsTask):
                     return False
                 self.setProgress(40)
 
+                fig_list = []
                 for ea in rek_selectie:
                     ls_list = []
                     avg_list = []
@@ -779,13 +780,14 @@ class ProevenVerzamelingTask(QgsTask):
                                                        columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
                             avg_list.append(df_avg_temp)
                             # Calculate the least squares estimate of the S en T and add them to a dataframe list
-                            fi, coh, E, E_per_n, eps, N = qb.get_least_squares(
+                            fi, coh, E, E_per_n, eps, N, fig = qb.get_least_squares(
                                 qb.get_trx_dlp_result(gtm_ids),
                                 ea=ea,
                                 plot_name='Least Squares Analysis, ea: ' +
                                 str(ea) + '\n' + key,
                                 show_plot=show_plot
                             )
+                            fig_list.append(fig)
                             df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
                                                        columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
                             ls_list.append(df_lst_temp)
