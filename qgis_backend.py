@@ -505,7 +505,7 @@ class qgis_backend:
         return round(np.degrees(fi), 1), round(coh, 1), round(E), round(E_per_n, 1), round(eps*100, 1), N, fig
 
     def get_sdp(self, gtm_ids):
-        """Querying compression tests\samendrukkingsproeven"""
+        """Querying compression tests\\samendrukkingsproeven"""
         if isinstance(gtm_ids, (list, tuple, pd.Series)):
             if len(gtm_ids) > 0:
                 if all(isinstance(x, (int)) for x in gtm_ids):

@@ -24,14 +24,12 @@
 import sys
 import os
 import traceback
-import time
 import pandas as pd
 import numpy as np
-import xlwt
+import xlsxwriter
 import cx_Oracle
-from matplotlib import pyplot as plt
 
-from qgis.core import QgsProject, QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
+from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
 from qgis.PyQt.QtGui import QIcon, QRegExpValidator
 from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox, QProgressDialog
@@ -230,7 +228,7 @@ class ProevenVerzameling:
         self.dlg.show()
 
     def read_form(self):
-        ''' Extraction of info from the dialog form. 
+        ''' Extraction of info from the dialog form.
             Checking credentials for the Oracle database connection.'''
         filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
@@ -239,7 +237,6 @@ class ProevenVerzameling:
         trx_bool = self.dlg.cb_TriaxiaalProeven.isChecked()
         sdp_bool = self.dlg.cb_SamendrukkingProeven.isChecked()
         if trx_bool:
-            
             ## asserts ...    
 
 
@@ -275,7 +272,7 @@ class ProevenVerzameling:
                 volG_sdp = None
 
         args = {'selected_layer': selected_layer,
-                'CU': CU, 'CD': CD, 'UU': UU,
+                'proef_types': proef_types,
                 'ea': ea,
                 'save_plot': save_plot,
                 'output_location': output_location, 'output_name': output_name,
@@ -426,7 +423,7 @@ class ProevenVerzameling:
         output_file = output_name + '.xls'
 
         # Check if the directory still has to be made.
-        if os.path.isdir(output_location) == False:
+        if os.path.isdir(output_location) is False:
             os.mkdir(output_location)
 
         # Extract the loc ids from the selected points in the selected layer
@@ -597,7 +594,6 @@ class ProevenVerzamelingTask(QgsTask):
         self.iface = iface
         self.exception = None
         self.traceback = None
-        self.duration = time.time()
 
         self.qb = kwargs.get('qb')
         self.selected_layer = kwargs.get('selected_layer')
@@ -647,11 +643,10 @@ class ProevenVerzamelingTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            self.duration = round((time.time() - self.duration)/1000, 1)
             self.iface.messageBar().pushMessage(
                 'Task "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
-                    duration=self.duration),
+                    duration=round(self.elapsedTime()/1000,2)),
                 Qgis.Info,
                 duration=3)
         else:
@@ -688,7 +683,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         # Check if the directory still has to be made.
         if os.path.isdir(self.output_location) is False:
-                os.mkdir(self.output_location)
+            os.mkdir(self.output_location)
 
         # Extract the loc ids from the selected points in the selected layer
         loc_ids = self.qb.get_loc_ids(self.selected_layer)
@@ -710,11 +705,11 @@ class ProevenVerzamelingTask(QgsTask):
             df_gm_filt_on_z = self.qb.select_on_z_coord(df_gm, self.maxH, self.minH)
             if df_gm_filt_on_z is None:
                 raise ValueError(
-                    "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
+                    "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(self.maxH, self.minH))
 
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
-                'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
+                    'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
 
         if self.isCanceled():
             return False
@@ -762,10 +757,10 @@ class ProevenVerzamelingTask(QgsTask):
                             row = row + len(dict_lstsq_stat[key].index) + 2
                     if dict_bbn_stat:
                         row = 0
-                        for key in df_bbn_stat_dict:
-                            df_bbn_stat_dict[key].to_excel(
+                        for key in dict_bbn_stat:
+                            dict_bbn_stat[key].to_excel(
                                 writer, sheet_name='bbn_kode Stat.', startrow=row)
-                            row = row + len(df_bbn_stat_dict[key].index) + 2
+                            row = row + len(dict_bbn_stat[key].index) + 2
                     if self.save_plot:
                         i = 1
                         for fig in fig_list:
@@ -792,7 +787,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.setProgress(40)
 
         df_dict = {'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
-                            'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result}
+                        'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result}
         df_bbn_stat_dict = {}
         df_lst_sqrs_dict = {}
         fig_list = []
@@ -816,15 +811,14 @@ class ProevenVerzamelingTask(QgsTask):
 
                     Vgmax = Vg_linspace[1:]
                     Vgmin = Vg_linspace[0:-1]
-                else:
-                    Vgmax = volG_trx[1:]
-                    Vgmin = volG_trx[0:-1]
+            else:
+                Vgmax = self.volG_trx[1:]
+                Vgmin = self.volG_trx[0:-1]
             
             self.setProgress(45)
 
             for ea in rek_selectie:
                 ls_list = []
-                avg_list = []
                 for vg_max, vg_min in zip(Vgmax, Vgmin):
                     # Make a selection for this volumetric weight interval
                     gtm_ids = self.qb.select_on_vg(
@@ -832,7 +826,7 @@ class ProevenVerzamelingTask(QgsTask):
                     if len(gtm_ids) > 0:
                         # Create a tag for this particular volumetric weight interval
                         key = 'Vg: ' + str(round(vg_min, 1)) + \
-                                '-' + str(round(vg_max, 1)) + ' kN/m3'
+                            '-' + str(round(vg_max, 1)) + ' kN/m3'
                         # Get the related TRX results...
                         #
                         # Potentially the next line could be done without querying the database again
@@ -841,7 +835,7 @@ class ProevenVerzamelingTask(QgsTask):
                         # can replicate the SQL filters
                         #            
                         # Calculate the least squares estimate of the S en T and add them to a dataframe list
-                        fi, coh, E, E_per_n, eps, N, fig = qb.get_least_squares(                            
+                        fi, coh, E, E_per_n, eps, N, fig = self.qb.get_least_squares(                            
                             self.qb.get_trx_dlp_result(gtm_ids),
                             ea=ea,
                             plot_name='Least Squares Analysis, ea: ' +
@@ -861,13 +855,12 @@ class ProevenVerzamelingTask(QgsTask):
         return df_dict, df_lst_sqrs_dict, fig_list, df_bbn_stat_dict
 
     def sdp(self, gtm_ids):
-        df_sdp = self.qb.get_sdp(df_gm_filt_on_z.GTM_ID)
+        df_sdp = self.qb.get_sdp(gtm_ids)
         if df_sdp is not None:
-            df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
+            df_sdp = self.qb.select_on_vg(df_sdp, self.maxVg, self.minVg)
         if df_sdp is not None:
-            df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
+            df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
             df_dict = {'BIS_SDP_Proeven': df_sdp,
-                            'BIS_SDP_Resultaten': df_sdp_result}
+                        'BIS_SDP_Resultaten': df_sdp_result}
         return df_dict
 
-        
