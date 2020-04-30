@@ -467,10 +467,10 @@ class qgis_backend:
             ax.plot([min(x), max(x)], [func(a, b, min(x)), func(a, b, max(x))], c='black', label='least squares fit')
             text = r'Line: $\tau = \sigma_n $* tan( ' + str(round(alpha, 3)) + r' ) + ' + str(round(b, 2)) \
                 + '\n' + r'$\alpha=' + str(round(alpha, 3)) + r', a=' + str(round(b, 2)) + r', \phi= $' + str(round(np.degrees(fi), 1)) + '\u00B0, C=' + str(round(coh, 2))\
-                + '\n' + 'Squared Error: ' + str(round(E, 1))\
-                + '\n' + 'Mean Squared Error: ' + str(round(E_per_n, 2))\
+                + '\n' + 'Sqr. Error: ' + str(round(E, 1))\
+                + '\n' + 'Mean Sqr. Error: ' + str(round(E_per_n, 2))\
                 + '\n' + 'Mean Error: ' + str(round(np.sqrt(E_per_n), 2))\
-                + '\n' + 'Mean Rel Error: ' + str(round(eps*100, 2)) + ' %'\
+                + '\n' + 'Mean Rel. Sqr. Err.: ' + str(round(eps*100, 2)) + ' %'\
                 + '\n' + 'N: ' + str(N)
             at = offsetbox.AnchoredText(text, loc='lower right', frameon=True)
             at.patch.set_boxstyle("round,pad=0.,rounding_size=0.2")
