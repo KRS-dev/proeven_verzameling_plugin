@@ -240,6 +240,7 @@ class ProevenVerzameling:
         output_name = self.dlg.le_outputName.text()
         args = {'selected_layer': selected_layer,
                 'output_location': output_location, 'output_name': output_name,
+                'trx_bool': trx_bool, 'sdp_bool': sdp_bool
                 }
 
         if trx_bool:
