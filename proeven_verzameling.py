@@ -863,9 +863,10 @@ class ProevenVerzamelingTask(QgsTask):
                         df_bbn_stat_dict[key].to_excel(
                             writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
-
-        for fig, i in fig_list, range(len(fig_list)):
+        i = 1
+        for fig in fig_list:
             fig.savefig(os.path.join(output_location, 'fig_{}.pdf'.format(i)))
+            i = i + 1
 
         os.startfile(output_file_dir)
         self.setProgress(100)
