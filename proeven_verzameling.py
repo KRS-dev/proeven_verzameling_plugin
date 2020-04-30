@@ -614,7 +614,6 @@ class ProevenVerzamelingTask(QgsTask):
         result is the return value from self.run.
         """
         if result:
-            plt.show()
             self.duration = round((time.time() - self.duration)/1000, 1)
             self.iface.messageBar().pushMessage(
                 'Task "{name}" completed in {duration} seconds.'.format(
@@ -864,6 +863,9 @@ class ProevenVerzamelingTask(QgsTask):
                         df_bbn_stat_dict[key].to_excel(
                             writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(df_bbn_stat_dict[key].index) + 2
+
+        for i, fig in fig_list:
+            fig.savefig(os.path.join(output_location, 'fig_{i}.pdf'.format(i)))
 
         os.startfile(output_file_dir)
         self.setProgress(100)
