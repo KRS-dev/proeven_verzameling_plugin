@@ -689,7 +689,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         # Extract the loc ids from the selected points in the selected layer
         loc_ids = self.qb.get_loc_ids(self.selected_layer)
-
+        loc_ids = [int(x) for x in loc_ids]
         if self.isCanceled():
             return False
         self.setProgress(10)
