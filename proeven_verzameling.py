@@ -236,6 +236,11 @@ class ProevenVerzameling:
         database = self.dlg.cmb_databases.currentText()
         trx_bool = self.dlg.cb_TriaxiaalProeven.isChecked()
         sdp_bool = self.dlg.cb_SamendrukkingProeven.isChecked()
+        
+        args = {'selected_layer': selected_layer,
+                'output_location': output_location, 'output_name': output_name,
+                }
+
         if trx_bool:
             ## asserts ...    
 
@@ -249,10 +254,11 @@ class ProevenVerzameling:
                 proef_types.append('CD')
             if self.dlg.cb_UU.isChecked():
                 proef_types.append('UU') 
-            ea = self.dlg.sb_strain.value()
-            save_plot = self.dlg.cb_savePlot.isChecked()
-            output_location = self.dlg.fileWidget.filePath()
-            output_name = self.dlg.le_outputName.text()
+            args['proef_types'] = proef_types
+            args['ea'] = self.dlg.sb_strain.value()
+            args['save_plot'] = self.dlg.cb_savePlot.isChecked()
+            args['output_location'] = self.dlg.fileWidget.filePath()
+            args['output_name'] = self.dlg.le_outputName.text()
 
             if self.dlg.le_vg_trx.text():
                 volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
@@ -261,6 +267,8 @@ class ProevenVerzameling:
                     volG_trx = None
             else:
                 volG_trx = None
+            args['volG_trx'] = volG_trx
+
         if sdp_bool:
             if self.dlg.le_vg_sdp.text():
                 volG_sdp = self.dlg.le_vg_sdp.text().strip(
@@ -270,14 +278,7 @@ class ProevenVerzameling:
                     volG_sdp = None
             else:
                 volG_sdp = None
-
-        args = {'selected_layer': selected_layer,
-                'proef_types': proef_types,
-                'ea': ea,
-                'save_plot': save_plot,
-                'output_location': output_location, 'output_name': output_name,
-                'volG_sdp': volG_sdp, 'volG_trx': volG_trx
-                }
+            args['volG_sdp'] = volG_sdp
 
         if filter_on_height:
             args['maxH'] = self.dlg.sb_maxHeight.value()
@@ -610,6 +611,7 @@ class ProevenVerzamelingTask(QgsTask):
             self.proef_types = kwargs.get('proef_types', ['CU'])
             self.volG_trx = kwargs.get('volG_trx')
             self.save_plot = kwargs.get('save_plot', False)
+            
         self.sdp_bool = kwargs.get('sdp_bool', False)
         if self.sdp_bool:
             self.volG_sdp = kwargs.get('volG_sdp')
