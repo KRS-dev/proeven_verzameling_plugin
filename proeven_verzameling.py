@@ -236,30 +236,43 @@ class ProevenVerzameling:
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
         selected_layer = self.dlg.cmb_layers.currentLayer()
         database = self.dlg.cmb_databases.currentText()
-        CU = self.dlg.cb_CU.isChecked()
-        CD = self.dlg.cb_CD.isChecked()
-        UU = self.dlg.cb_UU.isChecked()
-        ea = self.dlg.sb_strain.value()
-        save_plot = self.dlg.cb_savePlot.isChecked()
-        output_location = self.dlg.fileWidget.filePath()
-        output_name = self.dlg.le_outputName.text()
+        trx_bool = self.dlg.cb_TriaxiaalProeven.isChecked()
+        sdp_bool = self.dlg.cb_SamendrukkingProeven.isChecked()
+        if trx_bool:
+            
+            ## asserts ...    
 
-        if self.dlg.le_vg_trx.text():
-            volG_trx = self.dlg.le_vg_trx.text().strip(
-                '[').strip(']').split(',')
-            volG_trx = [float(x) for x in volG_trx]
-            if len(volG_trx) < 2:
+
+            ##
+
+            proef_types = []
+            if self.dlg.cb_CU.isChecked():
+                proef_types.append('CU')
+            if self.dlg.cb_CD.isChecked():
+                proef_types.append('CD')
+            if self.dlg.cb_UU.isChecked():
+                proef_types.append('UU') 
+            ea = self.dlg.sb_strain.value()
+            save_plot = self.dlg.cb_savePlot.isChecked()
+            output_location = self.dlg.fileWidget.filePath()
+            output_name = self.dlg.le_outputName.text()
+
+            if self.dlg.le_vg_trx.text():
+                volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+                volG_trx = [float(x) for x in volG_trx]
+                if len(volG_trx) < 2:
+                    volG_trx = None
+            else:
                 volG_trx = None
-        else:
-            volG_trx = None
-        if self.dlg.le_vg_sdp.text():
-            volG_sdp = self.dlg.le_vg_sdp.text().strip(
-                '[').strip(']').split(',')
-            volG_sdp = [float(x) for x in volG_sdp]
-            if len(volG_sdp) < 2:
+        if sdp_bool:
+            if self.dlg.le_vg_sdp.text():
+                volG_sdp = self.dlg.le_vg_sdp.text().strip(
+                    '[').strip(']').split(',')
+                volG_sdp = [float(x) for x in volG_sdp]
+                if len(volG_sdp) < 2:
+                    volG_sdp = None
+            else:
                 volG_sdp = None
-        else:
-            volG_sdp = None
 
         args = {'selected_layer': selected_layer,
                 'CU': CU, 'CD': CD, 'UU': UU,
@@ -359,11 +372,13 @@ class ProevenVerzameling:
         self.dlg.cb_filterOnVolumetricWeight.setChecked(False)
         self.dlg.sb_maxVolumetricWeight.setValue(22)
         self.dlg.sb_minVolumetricWeight.setValue(8)
+        self.dlg.cb_TriaxiaalProeven.setChecked(True)
+        self.dlg.cb_SamendrukkingProeven(True)
         self.dlg.cb_CU.setChecked(True)
         self.dlg.cb_CD.setChecked(False)
         self.dlg.cb_UU.setChecked(False)
         self.dlg.sb_strain.setValue(5)
-        self.dlg.cb_showPlot.setChecked(True)
+        self.dlg.cb_savePlot.setChecked(False)
         self.dlg.fileWidget.setFilePath(self.dlg.fileWidget.defaultRoot())
         self.dlg.le_outputName.setText('BIS_Geo_Proeven')
 
@@ -577,13 +592,31 @@ class ProevenVerzameling:
 class ProevenVerzamelingTask(QgsTask):
     """Creating a task to run all the heavy processes in the background on a different thread"""
 
-    def __init__(self, description, iface, args):
+    def __init__(self, description, iface, **kwargs):
         super().__init__(description, QgsTask.CanCancel)
         self.iface = iface
-        self.args = args
         self.exception = None
         self.traceback = None
         self.duration = time.time()
+
+        self.qb = kwargs.get('qb')
+        self.selected_layer = kwargs.get('selected_layer')
+        self.output_location = kwargs.get('output_location')
+        self.output_name = kwargs.get('output_name')
+        self.maxH = kwargs.get('maxH', 1000)
+        self.minH = kwargs.get('minH', -1000)
+        self.maxVg = kwargs.get('maxVg', 40)
+        self.minVg = kwargs.get('minVg', 0)
+        
+        self.trx_bool = kwargs.get('trx_bool', False)
+        if self.trx_bool:
+            self.ea = kwargs.get('ea', [2])
+            self.proef_types = kwargs.get('proef_types', ['CU'])
+            self.volG_trx = kwargs.get('volG_trx')
+            self.save_plot = kwargs.get('save_plot', False)
+        self.sdp_bool = kwargs.get('sdp_bool', False)
+        if self.sdp_bool:
+            self.volG_sdp = kwargs.get('volG_sdp')
 
     def run(self):
         """
@@ -647,193 +680,70 @@ class ProevenVerzamelingTask(QgsTask):
             Qgis.Info, duration=3)
         super().cancel()
 
-    def get_data(self,
-                 qb,
-                 selected_layer,
-                 CU, CD, UU, ea,
-                 save_plot,
-                 output_location, output_name,
-                 volG_sdp, volG_trx,
-                 maxH=1000, minH=-1000, maxVg=40, minVg=0
-                 ):
+    def get_data(self):
 
         self.setProgress(0)
 
-        proef_types = []    # ['CU','CD','UU']
-        if CU:
-            proef_types.append('CU')
-        if CD:
-            proef_types.append('CD')
-        if UU:
-            proef_types.append('UU')
-
-        rek_selectie = [ea]
-        output_file = output_name + '.xlsx'
+        output_file = self.output_name + '.xlsx'
 
         # Check if the directory still has to be made.
-        if os.path.isdir(output_location) is False:
-            os.mkdir(output_location)
+        if os.path.isdir(self.output_location) is False:
+                os.mkdir(self.output_location)
 
         # Extract the loc ids from the selected points in the selected layer
-        loc_ids = qb.get_loc_ids(selected_layer)
+        loc_ids = self.qb.get_loc_ids(self.selected_layer)
 
         if self.isCanceled():
             return False
         self.setProgress(10)
 
         # Get all meetpunten related to these loc_ids
-        df_meetp = qb.get_meetpunten(loc_ids)
-        df_geod = qb.get_geo_dossiers(df_meetp.GDS_ID)
+        df_meetp = self.qb.get_meetpunten(loc_ids)
+        df_geod = self.qb.get_geo_dossiers(df_meetp.GDS_ID)
 
         if self.isCanceled():
             return False
         self.setProgress(20)
 
-        df_gm = qb.get_geotech_monsters(loc_ids)
+        df_gm = self.qb.get_geotech_monsters(loc_ids)
         if df_gm is not None:
-            df_gm_filt_on_z = qb.select_on_z_coord(df_gm, maxH, minH)
+            df_gm_filt_on_z = self.qb.select_on_z_coord(df_gm, self.maxH, self.minH)
             if df_gm_filt_on_z is None:
                 raise ValueError(
                     "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(maxH, minH))
+
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
-                   'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
-
-        df_sdp = qb.get_sdp(df_gm_filt_on_z.GTM_ID)
-        if df_sdp is not None:
-            df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
-        if df_sdp is not None:
-            df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
-            df_dict.update({'BIS_SDP_Proeven': df_sdp,
-                            'BIS_SDP_Resultaten': df_sdp_result})
+                'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
 
         if self.isCanceled():
             return False
-        self.setProgress(35)
+        self.setProgress(30)
 
-        df_trx = qb.get_trx(df_gm_filt_on_z.GTM_ID, proef_type=proef_types)
-        if df_trx is not None:
-            df_trx = qb.select_on_vg(df_trx, maxVg, minVg)
-        if df_trx is not None:
-            # Get all TRX results, TRX deelproeven and TRX deelproef results
-            df_trx_results = qb.get_trx_result(df_trx.GTM_ID)
-            df_trx_dlp = qb.get_trx_dlp(df_trx.GTM_ID)
-            df_trx_dlp_result = qb.get_trx_dlp_result(df_trx.GTM_ID)
-            df_dict.update({'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
-                            'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result})
-            df_bbn_stat_dict = {}
-            df_vg_stat_dict = {}
-            df_lst_sqrs_dict = {}
-            # Doing statistics on the select TRX proeven
-            if len(df_trx.index) > 1:
+        if self.trx_bool:
+            dict_trx, dict_lstsq_stat, fig_list, dict_bbn_stat = \
+                self.trx(df_gm_filt_on_z.GTM_ID)
+            df_dict.update(dict_trx)
 
-                if volG_trx is None:
-                    # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                    minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(
-                        df_trx.VOLUMEGEWICHT_NAT)
-                    N = round(len(df_trx.index) / 5) + 1
-                    cutoff = 1  # The interval cant be lower than 1 kn/m3
-                    if (maxvg-minvg)/N > cutoff:
-                        Vg_linspace = np.linspace(minvg, maxvg, N)
-                    else:
-                        N = round((maxvg-minvg)/cutoff)
-                        if N < 2:
-                            Vg_linspace = np.linspace(minvg, maxvg, 2)
-                        else:
-                            Vg_linspace = np.linspace(minvg, maxvg, N)
+        if self.isCanceled():
+            return False
+        self.setProgress(60)
 
-                    Vgmax = Vg_linspace[1:]
-                    Vgmin = Vg_linspace[0:-1]
-                else:
-                    Vgmax = volG_trx[1:]
-                    Vgmin = volG_trx[0:-1]
+        if self.sdp_bool:
+            dict_sdp = self.sdp(df_gm_filt_on_z)
+            df_dict.update(dict_sdp)
+        
+        if self.isCanceled():
+            return False
+        self.setProgress(80)
 
-                if self.isCanceled():
-                    return False
-                self.setProgress(40)
-
-                fig_list = []
-                for ea in rek_selectie:
-                    ls_list = []
-                    avg_list = []
-                    for vg_max, vg_min in zip(Vgmax, Vgmin):
-                        # Make a selection for this volumetric weight interval
-                        gtm_ids = qb.select_on_vg(
-                            df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
-                        if len(gtm_ids) > 0:
-                            # Create a tag for this particular volumetric weight interval
-                            key = 'Vg: ' + str(round(vg_min, 1)) + \
-                                '-' + str(round(vg_max, 1)) + ' kN/m3'
-                            # Get the related TRX results...
-                            #
-                            # Potentially the next line could be done without querying the database again
-                            # for the data that is already availabe in the variable df_trx_results
-                            # but I have not found the right type of filter methods in Pandas which
-                            # can replicate the SQL filters
-                            #
-                            df_trx_results_temp = qb.get_trx_result(gtm_ids)
-                            # Calculate the averages and standard deviation of fi and coh for different strain types and add them to a dataframe list
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
-                                df_trx_results_temp, ea)
-                            df_avg_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, mean_fi, mean_coh, std_fi, std_coh, N]],
-                                                       columns=['MIN(VG)', 'MAX(VG)', 'MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N'])
-                            avg_list.append(df_avg_temp)
-                            # Calculate the least squares estimate of the S en T and add them to a dataframe list
-                            fi, coh, E, E_per_n, eps, N, fig = qb.get_least_squares(
-                                qb.get_trx_dlp_result(gtm_ids),
-                                ea=ea,
-                                plot_name='Least Squares Analysis, ea: ' +
-                                str(ea) + '\n' + key,
-                                save_plot=save_plot
-                            )
-                            fig_list.append(fig)
-                            df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
-                                                       columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
-                            ls_list.append(df_lst_temp)
-                    if len(ls_list) > 0:
-                        df_ls_stat = pd.concat(ls_list)
-                        df_ls_stat.index.name = 'ea: ' + str(ea) + '%'
-                        df_lst_sqrs_dict.update(
-                            {str(ea) + r'% rek least squares fit': df_ls_stat})
-                    if len(avg_list) > 0:
-                        df_avg_stat = pd.concat(avg_list)
-                        df_avg_stat.index.name = 'ea: ' + str(ea) + '%'
-                        df_vg_stat_dict.update(
-                            {str(ea) + r'% rek gemiddelde fit': df_avg_stat})
-
-                if self.isCanceled():
-                    return False
-                self.setProgress(80)
-
-                for ea in rek_selectie:
-                    bbn_list = []
-                    for bbn_code in pd.unique(df_trx.BBN_KODE):
-                        gtm_ids = df_trx[df_trx.BBN_KODE == bbn_code].GTM_ID
-                        if len(gtm_ids > 0):
-                            df_trx_results_temp = qb.get_trx_result(gtm_ids)
-                            mean_fi, std_fi, mean_coh, std_coh, N = qb.get_average_per_ea(
-                                df_trx_results_temp, ea)
-                            bbn_list.append(pd.DataFrame(index=[bbn_code], data=[[mean_fi, mean_coh, std_fi, std_coh, N]],
-                                                         columns=['MEAN(FI)', 'MEAN(COH)', 'STD(FI)', 'STD(COH)', 'N']))
-                    if len(bbn_list) > 0:
-                        df_bbn_stat = pd.concat(bbn_list)
-                        df_bbn_stat.index.name = 'ea: ' + str(ea) + '%'
-                        df_bbn_stat_dict.update(
-                            {str(ea) + r'% rek per BBN code': df_bbn_stat})
-
-        # Check if the .xlsx file exists
-        output_file_dir = os.path.join(output_location, output_file)
+        output_file_dir = os.path.join(self.output_location, output_file)
         if os.path.exists(output_file_dir):
             name, ext = output_file.split('.')
             i = 1
-            while os.path.exists(os.path.join(output_location, name + '{}.'.format(i) + ext)):
+            while os.path.exists(os.path.join(self.output_location, name + '{}.'.format(i) + ext)):
                 i += 1
-            output_file_dir = os.path.join(
-                output_location, name + '{}.'.format(i) + ext)
-
-        if self.isCanceled():
-            return False
-        self.setProgress(90)
+            output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         # untrue: writer in append mode so that the NEN tables are kept
@@ -842,34 +752,122 @@ class ProevenVerzamelingTask(QgsTask):
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key)
 
-            if df_trx is not None:
-                # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
-                if df_vg_stat_dict:
-                    row = 0
-                    for key in df_vg_stat_dict:
-                        df_vg_stat_dict[key].to_excel(
-                            writer, sheet_name='Simpele Vg stat.', startrow=row)
-                        row = row + len(df_vg_stat_dict[key].index) + 2
-                # Repeat...
-                if df_lst_sqrs_dict:
-                    row = 0
-                    for key in df_lst_sqrs_dict:
-                        df_lst_sqrs_dict[key].to_excel(
-                            writer, sheet_name='Least Squares Vg Stat.', startrow=row)
-                        row = row + len(df_lst_sqrs_dict[key].index) + 2
-                if df_bbn_stat_dict:
-                    row = 0
-                    for key in df_bbn_stat_dict:
-                        df_bbn_stat_dict[key].to_excel(
-                            writer, sheet_name='bbn_kode Stat.', startrow=row)
-                        row = row + len(df_bbn_stat_dict[key].index) + 2
-        if save_plot:
-            i = 1
-            for fig in fig_list:
-                fig.savefig(os.path.join(output_location, 'fig_{}.pdf'.format(i)))
-                i = i + 1
+                if self.trx_bool:
+                    # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
+                    if dict_lstsq_stat:
+                        row = 0
+                        for key in dict_lstsq_stat:
+                            dict_lstsq_stat[key].to_excel(
+                                writer, sheet_name='Least Squares Vg Stat.', startrow=row)
+                            row = row + len(dict_lstsq_stat[key].index) + 2
+                    if dict_bbn_stat:
+                        row = 0
+                        for key in df_bbn_stat_dict:
+                            df_bbn_stat_dict[key].to_excel(
+                                writer, sheet_name='bbn_kode Stat.', startrow=row)
+                            row = row + len(df_bbn_stat_dict[key].index) + 2
+                    if self.save_plot:
+                        i = 1
+                        for fig in fig_list:
+                            fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
+                            i = i + 1
 
-        os.startfile(output_file_dir)
+        if self.isCanceled():
+            return False
         self.setProgress(100)
         return True
 
+    def trx(self, gtm_ids):
+            
+        rek_selectie = [self.ea]
+
+        df_trx = self.qb.get_trx(gtm_ids, proef_type=self.proef_types)
+
+        df_trx = self.qb.select_on_vg(df_trx, self.maxVg, self.minVg)
+        # Get all TRX results, TRX deelproeven and TRX deelproef results
+        df_trx_results = self.qb.get_trx_result(df_trx.GTM_ID)
+        df_trx_dlp = self.qb.get_trx_dlp(df_trx.GTM_ID)
+        df_trx_dlp_result = self.qb.get_trx_dlp_result(df_trx.GTM_ID)
+
+        self.setProgress(40)
+
+        df_dict = {'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
+                            'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result}
+        df_bbn_stat_dict = {}
+        df_lst_sqrs_dict = {}
+        fig_list = []
+        # Doing statistics on the select TRX proeven
+        if len(df_trx.index) > 1:
+
+            if self.volG_trx is None:
+                # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+                minvg, maxvg = min(df_trx.VOLUMEGEWICHT_NAT), max(
+                    df_trx.VOLUMEGEWICHT_NAT)
+                N = round(len(df_trx.index) / 5) + 1
+                cutoff = 1  # The interval cant be lower than 1 kn/m3
+                if (maxvg-minvg)/N > cutoff:
+                    Vg_linspace = np.linspace(minvg, maxvg, N)
+                else:
+                    N = round((maxvg-minvg)/cutoff)
+                    if N < 2:
+                        Vg_linspace = np.linspace(minvg, maxvg, 2)
+                    else:
+                        Vg_linspace = np.linspace(minvg, maxvg, N)
+
+                    Vgmax = Vg_linspace[1:]
+                    Vgmin = Vg_linspace[0:-1]
+                else:
+                    Vgmax = volG_trx[1:]
+                    Vgmin = volG_trx[0:-1]
+            
+            self.setProgress(45)
+
+            for ea in rek_selectie:
+                ls_list = []
+                avg_list = []
+                for vg_max, vg_min in zip(Vgmax, Vgmin):
+                    # Make a selection for this volumetric weight interval
+                    gtm_ids = self.qb.select_on_vg(
+                        df_trx, Vg_max=vg_max, Vg_min=vg_min, soort='nat')['GTM_ID']
+                    if len(gtm_ids) > 0:
+                        # Create a tag for this particular volumetric weight interval
+                        key = 'Vg: ' + str(round(vg_min, 1)) + \
+                                '-' + str(round(vg_max, 1)) + ' kN/m3'
+                        # Get the related TRX results...
+                        #
+                        # Potentially the next line could be done without querying the database again
+                        # for the data that is already availabe in the variable df_trx_results
+                        # but I have not found the right type of filter methods in Pandas which
+                        # can replicate the SQL filters
+                        #            
+                        # Calculate the least squares estimate of the S en T and add them to a dataframe list
+                        fi, coh, E, E_per_n, eps, N, fig = qb.get_least_squares(                            
+                            self.qb.get_trx_dlp_result(gtm_ids),
+                            ea=ea,
+                            plot_name='Least Squares Analysis, ea: ' +
+                            str(ea) + '\n' + key,
+                            save_plot=self.save_plot
+                        )
+                        fig_list.append(fig)
+                        df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
+                                                columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
+                        ls_list.append(df_lst_temp)
+                if len(ls_list) > 0:
+                    df_ls_stat = pd.concat(ls_list)
+                    df_ls_stat.index.name = 'ea: ' + str(ea) + '%'                    
+                    df_lst_sqrs_dict.update(
+                        {str(ea) + r'% rek least squares fit': df_ls_stat})
+        
+        return df_dict, df_lst_sqrs_dict, fig_list, df_bbn_stat_dict
+
+    def sdp(self, gtm_ids):
+        df_sdp = self.qb.get_sdp(df_gm_filt_on_z.GTM_ID)
+        if df_sdp is not None:
+            df_sdp = qb.select_on_vg(df_sdp, maxVg, minVg)
+        if df_sdp is not None:
+            df_sdp_result = qb.get_sdp_result(df_gm.GTM_ID)
+            df_dict = {'BIS_SDP_Proeven': df_sdp,
+                            'BIS_SDP_Resultaten': df_sdp_result}
+        return df_dict
+
+        
