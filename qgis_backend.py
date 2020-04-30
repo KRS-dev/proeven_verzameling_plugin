@@ -431,8 +431,8 @@ class qgis_backend:
 
         E = np.sum(y_res**2)  # Abs. Squared Error
         E_per_n = E/N  # Mean Squared Error
-        # Normalised/Relative Error average for all points
-        eps = np.mean(y_res**2/y**2)
+        # Relative Squared Error average for all points
+        eps = np.mean(y_res**2)/np.mean(y**2)
         # Einde Least Squares fitting
 
         if show_plot:
