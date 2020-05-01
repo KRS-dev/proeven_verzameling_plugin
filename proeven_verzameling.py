@@ -21,9 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
-import sys
 import os
-import traceback
 import pandas as pd
 import numpy as np
 import xlsxwriter
@@ -709,7 +707,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
-                    'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
+                'BIS_Geotechnische_Monsters': df_gm_filt_on_z}
 
         if self.isCanceled():
             return False
@@ -896,7 +894,7 @@ class ProevenVerzamelingTask(QgsTask):
 
             sdp_stat_list = []
             for vgmin, vgmax in zip(Vgmin, Vgmax):
-                sdp = sdp[(sdp['VOLUMEGEWICHT_NAT'] >= vgMin) & (sdp['VOLUMEGEWICHT_NAT'] < vgMax)]
+                sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] < vgmax)]
                 sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG','BJERRUM_PG']]
 
                 rows = []
@@ -904,19 +902,19 @@ class ProevenVerzamelingTask(QgsTask):
                     gtm_id = sdp_slice['GTM_ID'][i]
                     grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG','BJERRUM_PG']]
                     
-                    df = sdp_result[(sdp_result['GTM_ID'] == gtm_id) & (sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
+                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
                     
                     load = 0
                     for i, row in df.iterrows():
                         if row['LOAD'] > load:
                             load = row['LOAD']
                             rows.append(row)
-                df_out = pd.DataFrame(columns=sdp_result.columns)
+                df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows, ignore_index=False)
                 df_out = df_out.iloc[:, 3:]
                 sdp_stat = df_out.agg(['mean','std','count'])
 
-                vg_str = 'Vg: {} - {} KN/m^3'.format(vgMin, vgMax)
+                vg_str = 'Vg: {} - {} KN/m^3'.format(vgmin, vgmax)
                 sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'),(vg_str, 'Std'),(vg_str, 'Count')])
                 sdp_stat = sdp_stat.T
                 sdp_stat[(vg_str,'Count')] = sdp_stat[(vg_str,'Count')].astype('int64')
