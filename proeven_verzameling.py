@@ -606,7 +606,6 @@ class ProevenVerzamelingTask(QgsTask):
         self.minVg = kwargs.get('minVg', 0)
         
         self.trx_bool = kwargs.get('trx_bool')
-        print(self.trx_bool)
         if self.trx_bool:
             self.ea = kwargs.get('ea', [2])
             self.proef_types = kwargs.get('proef_types', ['CU'])
@@ -706,7 +705,7 @@ class ProevenVerzamelingTask(QgsTask):
             df_gm_filt_on_z = self.qb.select_on_z_coord(df_gm, self.maxH, self.minH)
             if df_gm_filt_on_z.empty:
                 raise ValueError(
-                    "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(self.maxH, self.minH))
+                    "There are no Geotechnische monsters in the depth range  {} to {} mNAP.".format(self.minH, self.maxH))
 
         # Add the df_meetp, df_geod and df_gm_filt_on_z to a dataframe dictionary
         df_dict = {'BIS_Meetpunten': df_meetp, 'BIS_GEO_Dossiers': df_geod,
@@ -785,7 +784,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         df_trx = self.qb.select_on_vg(df_trx, self.maxVg, self.minVg)
         if df_trx.empty:
-            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} bestaan er geen Triaxiaalproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
+            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Triaxiaalproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
         # Get all TRX results, TRX deelproeven and TRX deelproef results
         df_trx_results = self.qb.get_trx_result(df_trx.GTM_ID)
         df_trx_dlp = self.qb.get_trx_dlp(df_trx.GTM_ID)
@@ -816,8 +815,8 @@ class ProevenVerzamelingTask(QgsTask):
                     else:
                         Vg_linspace = np.linspace(minvg, maxvg, N)
 
-                    Vgmax = Vg_linspace[1:]
-                    Vgmin = Vg_linspace[0:-1]
+                Vgmax = Vg_linspace[1:]
+                Vgmin = Vg_linspace[0:-1]
             else:
                 Vgmax = self.volG_trx[1:]
                 Vgmin = self.volG_trx[0:-1]
@@ -862,15 +861,69 @@ class ProevenVerzamelingTask(QgsTask):
         return df_dict, df_lst_sqrs_dict, fig_list, df_bbn_stat_dict
 
     def sdp(self, gtm_ids):
+        df_dict = {}
         df_sdp = self.qb.get_sdp(gtm_ids)
         if df_sdp.empty:
             raise pd.errors.EmptyDataError('De geselecteerde meetpunten bevatten geen samendrukkingsproeven.')
         df_sdp = self.qb.select_on_vg(df_sdp, self.maxVg, self.minVg)
         if df_sdp.empty:
-            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} bestaan er geen Samendrukkingsproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
-        if df_sdp is not None:
+            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Samendrukkingsproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
+        else:
             df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
-            df_dict = {'BIS_SDP_Proeven': df_sdp,
-                    'BIS_SDP_Resultaten': df_sdp_result}
+            df_dict.update({'BIS_SDP_Proeven': df_sdp,
+                    'BIS_SDP_Resultaten': df_sdp_result})
+            
+            if self.volG_sdp is None:
+                # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+                minvg, maxvg = min(df_sdp.VOLUMEGEWICHT_NAT), max(
+                    df_sdp.VOLUMEGEWICHT_NAT)
+                N = round(len(df_sdp.index) / 5) + 1
+                cutoff = 1  # The interval cant be lower than 1 kn/m3
+                if (maxvg-minvg)/N > cutoff:
+                    Vg_linspace = np.linspace(minvg, maxvg, N)
+                else:
+                    N = round((maxvg-minvg)/cutoff)
+                    if N < 2:
+                        Vg_linspace = np.linspace(minvg, maxvg, 2)
+                    else:
+                        Vg_linspace = np.linspace(minvg, maxvg, N)
+
+                Vgmax = Vg_linspace[1:]
+                Vgmin = Vg_linspace[0:-1]
+            else:
+                Vgmax = self.volG_sdp[1:]
+                Vgmin = self.volG_sdp[0:-1]
+
+            sdp_stat_list = []
+            for vgmin, vgmax in zip(Vgmin, Vgmax):
+                sdp = sdp[(sdp['VOLUMEGEWICHT_NAT'] >= vgMin) & (sdp['VOLUMEGEWICHT_NAT'] < vgMax)]
+                sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG','BJERRUM_PG']]
+
+                rows = []
+                for i, row in sdp_slice.iterrows():
+                    gtm_id = sdp_slice['GTM_ID'][i]
+                    grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG','BJERRUM_PG']]
+                    
+                    df = sdp_result[(sdp_result['GTM_ID'] == gtm_id) & (sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
+                    
+                    load = 0
+                    for i, row in df.iterrows():
+                        if row['LOAD'] > load:
+                            load = row['LOAD']
+                            rows.append(row)
+                df_out = pd.DataFrame(columns=sdp_result.columns)
+                df_out = df_out.append(rows, ignore_index=False)
+                df_out = df_out.iloc[:, 3:]
+                sdp_stat = df_out.agg(['mean','std','count'])
+
+                vg_str = 'Vg: {} - {} KN/m^3'.format(vgMin, vgMax)
+                sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'),(vg_str, 'Std'),(vg_str, 'Count')])
+                sdp_stat = sdp_stat.T
+                sdp_stat[(vg_str,'Count')] = sdp_stat[(vg_str,'Count')].astype('int64')
+                sdp_stat_list.append(sdp_stat)
+            
+            sdp_stat = pd.concat(sdp_stat_list, 1)
+            df_dict.update({'SDP_STAT': sdp_stat})
+
         return df_dict
 
