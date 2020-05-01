@@ -595,7 +595,6 @@ class ProevenVerzamelingTask(QgsTask):
         super().__init__(description, QgsTask.CanCancel)
         self.iface = iface
         self.exception = None
-        self.traceback = None
 
         self.qb = kwargs.get('qb')
         self.selected_layer = kwargs.get('selected_layer')
@@ -633,7 +632,6 @@ class ProevenVerzamelingTask(QgsTask):
                 return False
         except Exception as e:
             self.exception = e
-            self.traceback = traceback.format_exc()
             return False
 
     def finished(self, result):
@@ -648,7 +646,7 @@ class ProevenVerzamelingTask(QgsTask):
         """
         if result:
             self.iface.messageBar().pushMessage(
-                'Task "{name}" completed in {duration} seconds.'.format(
+                'Task: "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
                     duration=round(self.elapsedTime()/1000, 2)),
                 Qgis.Info,
@@ -656,7 +654,7 @@ class ProevenVerzamelingTask(QgsTask):
         else:
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
-                    'RandomTask "{name}" not successful but without '
+                    'Task: "{name}" not successful but without '
                     'exception (probably the task was manually '
                     'canceled by the user)'.format(
                         name=self.description()),
@@ -664,10 +662,9 @@ class ProevenVerzamelingTask(QgsTask):
                     duration=3)
             else:
                 self.iface.messageBar().pushMessage(
-                    'RandomTask "{name}" Exception: {exception}, Traceback: {traceback}'.format(
+                    'Task: "{name}" threw an Exception: {exception}'.format(
                         name=self.description(),
-                        exception=self.exception,
-                        traceback=self.traceback),
+                        exception=self.exception),
                     Qgis.Critical,
                     duration=10)
                 raise self.exception
@@ -707,7 +704,7 @@ class ProevenVerzamelingTask(QgsTask):
         df_gm = self.qb.get_geotech_monsters(loc_ids)
         if df_gm is not None:
             df_gm_filt_on_z = self.qb.select_on_z_coord(df_gm, self.maxH, self.minH)
-            if df_gm_filt_on_z is None:
+            if df_gm_filt_on_z.empty:
                 raise ValueError(
                     "There are no Geotechnische monsters in this depth range. {} to {} mNAP".format(self.maxH, self.minH))
 
@@ -767,11 +764,12 @@ class ProevenVerzamelingTask(QgsTask):
                         dict_bbn_stat[key].to_excel(
                             writer, sheet_name='bbn_kode Stat.', startrow=row)
                         row = row + len(dict_bbn_stat[key].index) + 2
-            if self.save_plot:
-                i = 1
-                for fig in fig_list:
-                    fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
-                    i = i + 1
+                
+                if self.save_plot:
+                    i = 1
+                    for fig in fig_list:
+                        fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
+                        i = i + 1
 
         if self.isCanceled():
             return False
@@ -786,6 +784,8 @@ class ProevenVerzamelingTask(QgsTask):
         df_trx = self.qb.get_trx(gtm_ids, proef_type=self.proef_types)
 
         df_trx = self.qb.select_on_vg(df_trx, self.maxVg, self.minVg)
+        if df_trx.empty:
+            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} bestaan er geen Triaxiaalproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
         # Get all TRX results, TRX deelproeven and TRX deelproef results
         df_trx_results = self.qb.get_trx_result(df_trx.GTM_ID)
         df_trx_dlp = self.qb.get_trx_dlp(df_trx.GTM_ID)
@@ -863,8 +863,11 @@ class ProevenVerzamelingTask(QgsTask):
 
     def sdp(self, gtm_ids):
         df_sdp = self.qb.get_sdp(gtm_ids)
-        if df_sdp is not None:
-            df_sdp = self.qb.select_on_vg(df_sdp, self.maxVg, self.minVg)
+        if df_sdp.empty:
+            raise pd.errors.EmptyDataError('De geselecteerde meetpunten bevatten geen samendrukkingsproeven.')
+        df_sdp = self.qb.select_on_vg(df_sdp, self.maxVg, self.minVg)
+        if df_sdp.empty:
+            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} bestaan er geen Samendrukkingsproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
         if df_sdp is not None:
             df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
             df_dict = {'BIS_SDP_Proeven': df_sdp,
