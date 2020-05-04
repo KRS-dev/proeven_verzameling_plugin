@@ -34,7 +34,7 @@
      <verstretch>1</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0,1,1,0,1,1,1,1,1,1">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,1,0,1,1,1,1,0,1">
     <property name="spacing">
      <number>10</number>
     </property>
@@ -53,34 +53,25 @@
     <item>
      <widget class="QLabel" name="label_10">
       <property name="text">
-       <string>Laag met Boring ID's</string>
+       <string>Selecteer de punten in de boringen in de laag die je wil exporteren.</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QgsMapLayerComboBox" name="cmb_layers">
-      <property name="toolTip">
-       <string>Selecteer hier de laag waarin Boor Locatie ID's (loc_id) te vinden zijn.</string>
+     <spacer name="verticalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
-     </widget>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>30</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item>
-     <widget class="QLabel" name="label_9">
-      <property name="text">
-       <string>Database:</string>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QComboBox" name="cmb_databases">
-        <property name="toolTip">
-         <string>Selecteer hier verwijzing naar de BIS database.</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <layout class="QHBoxLayout" name="horizontalLayout_2"/>
     </item>
     <item alignment="Qt::AlignVCenter">
      <widget class="QgsCollapsibleGroupBox" name="cb_filterOnHeight">
@@ -606,7 +597,7 @@
     <item>
      <widget class="QLabel" name="label_3">
       <property name="text">
-       <string>Excel File Naam:</string>
+       <string>Excel Uitvoernaam:</string>
       </property>
      </widget>
     </item>
@@ -632,7 +623,7 @@
     <item>
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Output Directory:</string>
+       <string>Uitvoermap</string>
       </property>
      </widget>
     </item>
@@ -651,7 +642,7 @@
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>60</height>
+        <height>30</height>
        </size>
       </property>
      </spacer>
@@ -683,11 +674,6 @@
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
-  </customwidget>
-  <customwidget>
-   <class>QgsMapLayerComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

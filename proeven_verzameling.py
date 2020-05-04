@@ -24,7 +24,6 @@
 import os
 import pandas as pd
 import numpy as np
-import xlsxwriter
 import cx_Oracle
 
 from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
@@ -240,84 +239,75 @@ class ProevenVerzameling:
                 'output_location': output_location, 'output_name': output_name,
                 'trx_bool': trx_bool, 'sdp_bool': sdp_bool
                 }
+        try:
+            # General Asserts
+            assert output_name, 'Het veld \'uitvoernaam\' mag niet leeg zijn.'
+            assert output_location, 'Het veld \'uitvoermap\' mag niet leeg zijn.' 
 
-        if trx_bool:
-            ## asserts ...    
+            if trx_bool:
+                # TRX Asserts
+                assert any([self.dlg.cb_CU.isChecked(), self.dlg.cb_CD.isChecked(), self.dlg.cb_UU.isChecked()]), 'Een van de drie Proeftypes moet aangekruisd worden.'
 
+                proef_types = []
+                if self.dlg.cb_CU.isChecked():
+                    proef_types.append('CU')
+                if self.dlg.cb_CD.isChecked():
+                    proef_types.append('CD')
+                if self.dlg.cb_UU.isChecked():
+                    proef_types.append('UU') 
+                args['proef_types'] = proef_types
+                args['ea'] = self.dlg.sb_strain.value()
+                args['save_plot'] = self.dlg.cb_savePlot.isChecked()
+                
 
-            ##
-
-            proef_types = []
-            if self.dlg.cb_CU.isChecked():
-                proef_types.append('CU')
-            if self.dlg.cb_CD.isChecked():
-                proef_types.append('CD')
-            if self.dlg.cb_UU.isChecked():
-                proef_types.append('UU') 
-            args['proef_types'] = proef_types
-            args['ea'] = self.dlg.sb_strain.value()
-            args['save_plot'] = self.dlg.cb_savePlot.isChecked()
-            
-
-            if self.dlg.le_vg_trx.text():
-                volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
-                volG_trx = [float(x) for x in volG_trx]
-                if len(volG_trx) < 2:
+                if self.dlg.le_vg_trx.text():
+                    volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+                    volG_trx = [float(x) for x in volG_trx].sort()
+                    if len(volG_trx) < 2:
+                        self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor triaxiaalproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
+                        volG_trx = None
+                else:
                     volG_trx = None
-            else:
-                volG_trx = None
-            args['volG_trx'] = volG_trx
+                args['volG_trx'] = volG_trx
 
-        if sdp_bool:
-            if self.dlg.le_vg_sdp.text():
-                volG_sdp = self.dlg.le_vg_sdp.text().strip(
-                    '[').strip(']').split(',')
-                volG_sdp = [float(x) for x in volG_sdp]
-                if len(volG_sdp) < 2:
+            if sdp_bool:
+                if self.dlg.le_vg_sdp.text():
+                    volG_sdp = self.dlg.le_vg_sdp.text().strip(
+                        '[').strip(']').split(',')
+                    volG_sdp = [float(x) for x in volG_sdp].sort()
+                    if len(volG_sdp) < 2:
+                        self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor samendrukkingsproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
+                        volG_sdp = None
+                else:
                     volG_sdp = None
-            else:
-                volG_sdp = None
-            args['volG_sdp'] = volG_sdp
+                args['volG_sdp'] = volG_sdp
 
-        if filter_on_height:
-            args['maxH'] = self.dlg.sb_maxHeight.value()
-            args['minH'] = self.dlg.sb_minHeight.value()
-        if filter_on_volumetric_weight:
-            args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
-            args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
+            if filter_on_height:
+                args['maxH'] = self.dlg.sb_maxHeight.value()
+                args['minH'] = self.dlg.sb_minHeight.value()
+                assert args['maxH'] > args['minH'], 'Maximum hoogte moet hoger zijn dan minimum hoogte.'
+            if filter_on_volumetric_weight:
+                args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
+                args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
+                assert args['maxVg'] > args['minVg'], 'Maximum volumegewicht moet hoger zijn dan het minimum volumegewicht.'
+        except Exception as e:
+            self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
+            return
 
-        settings = QSettings()
-        allkeys = settings.allKeys()
-        allvalues = [settings.value(k) for k in allkeys]
-        allsettings = dict(zip(allkeys, allvalues))
-        for key, val in allsettings.items():
-            if 'database' in key:
-                if val == database:
-                    databasekey = key
-        databasekey = databasekey.rstrip('database')
-        selected_databasekeys = [k for k in allkeys if databasekey in k]
-        host = settings.value(
-            [k for k in selected_databasekeys if 'host' in k][0])
-        port = settings.value(
-            [k for k in selected_databasekeys if 'port' in k][0])
+        source = selected_layer.source()
+        uri = QgsDataSourceUri(source)
 
-        saveUsername = settings.value(
-            [k for k in selected_databasekeys if 'saveUsername' in k][0], None)
-        savePassword = settings.value(
-            [k for k in selected_databasekeys if 'savePassword' in k][0], None)
-        username = None
-        password = None
-        if saveUsername == 'true':
-            saveUsername = True
-            username = settings.value(
-                [k for k in selected_databasekeys if 'username' in k][0], None)
-        if savePassword == 'true':
-            savePassword = True
-            password = settings.value(
-                [k for k in selected_databasekeys if 'password' in k][0], None)
+        savedUsername = uri.hasParam('username')
+        savedPassword = uri.hasParam('password')
+
+        host = uri.host()
+        port = uri.port()
+        database = uri.database()
+        username = uri.username()
+        password = uri.password()
 
         errorMessage = None
-        if saveUsername is True and savePassword is True:
+        if savedUsername is True and savedPassword is True:
             try:
                 qb = qgis_backend.qgis_backend(
                     host=host, port=port, database=database, username=username, password=password)
@@ -895,12 +885,12 @@ class ProevenVerzamelingTask(QgsTask):
             sdp_stat_list = []
             for vgmin, vgmax in zip(Vgmin, Vgmax):
                 sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] < vgmax)]
-                sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG','BJERRUM_PG']]
+                sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
 
                 rows = []
                 for i, row in sdp_slice.iterrows():
                     gtm_id = sdp_slice['GTM_ID'][i]
-                    grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG','BJERRUM_PG']]
+                    grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG', 'BJERRUM_PG']]
                     
                     df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
                     
@@ -912,12 +902,12 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows, ignore_index=False)
                 df_out = df_out.iloc[:, 3:]
-                sdp_stat = df_out.agg(['mean','std','count'])
+                sdp_stat = df_out.agg(['mean', 'std', 'count'])
 
                 vg_str = 'Vg: {} - {} KN/m^3'.format(vgmin, vgmax)
-                sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'),(vg_str, 'Std'),(vg_str, 'Count')])
+                sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
                 sdp_stat = sdp_stat.T
-                sdp_stat[(vg_str,'Count')] = sdp_stat[(vg_str,'Count')].astype('int64')
+                sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
                 sdp_stat_list.append(sdp_stat)
             
             sdp_stat = pd.concat(sdp_stat_list, 1)
