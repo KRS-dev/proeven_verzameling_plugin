@@ -244,7 +244,6 @@ class ProevenVerzameling:
                 args['proef_types'] = proef_types
                 args['ea'] = self.dlg.sb_strain.value()
                 args['save_plot'] = self.dlg.cb_savePlot.isChecked()
-                
 
                 if self.dlg.le_vg_trx.text():
                     volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')

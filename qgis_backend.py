@@ -90,7 +90,8 @@ class qgis_backend:
                         values = chunk
                         bindValues = [':' + str(i+1)
                                       for i in range(len(values))]
-                        query = 'SELECT * FROM bis_graf_loc_aanduidingen '\
+                        query = 'SELECT LGA_ID, LOC_ID, GRAF_PRIM_SOORT, SUB_TYPE, AANGR_PUNT_X, AANGR_PUNT_Y, T, MPT_ID, GBO_KODE, PJM_ID, TDK_KODE, KODE_FIN_PROJECT, STATUS, MPB_SUB_TYPE, MPO_SUB_TYPE, BOR_SUB_TYPE, GBO_SUB_TYPE, MBO_SUB_TYPE, DATUM, GDS_ID, REFERENTIEVLAK, REFERENTIEVLAK_NIVEAU, NIVEAU_TOV_REFVLAK, NIVEAU_TOV_NAP, FOTO' \
+                            + 'FROM bis_graf_loc_aanduidingen '\
                             + 'INNER JOIN bis_meetpunten ON bis_meetpunten.mpt_id = bis_graf_loc_aanduidingen.loc_id '\
                             + 'WHERE bis_graf_loc_aanduidingen.loc_id IN ({})'.format(','.join(bindValues))
                         fetched, description = self.fetch(query, values)
@@ -98,6 +99,7 @@ class qgis_backend:
                             meetp_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             meetp_df.columns = colnames
+                            meetp_df = meetp_df.set_index('MPT_ID')
                             meetp_df.GDS_ID = meetp_df.GDS_ID.fillna(0)
                             meetp_df.GDS_ID = pd.to_numeric(
                                 meetp_df.GDS_ID, downcast='integer')
