@@ -208,19 +208,6 @@ class ProevenVerzameling:
             filename_validator = QRegExpValidator(rx2)
             self.dlg.le_outputName.setValidator(filename_validator)
 
-        # Look for all the databases connected in Qgis
-        settings = QSettings()
-        allkeys = settings.allKeys()
-        databases = [k for k in allkeys if 'database' in k]
-        databaseNames = [settings.value(k) for k in databases]
-        # Holding on to the previous current index
-        cur_i = self.dlg.cmb_databases.currentIndex()
-        self.dlg.cmb_databases.clear()
-        self.dlg.cmb_databases.addItems(databaseNames)
-        # On first_start there would be no previous current index and currentIndex would return -1
-        if cur_i != -1:
-            self.dlg.cmb_databases.setCurrentIndex(cur_i)
-
         # show the dialog
         self.dlg.show()
 
@@ -230,7 +217,6 @@ class ProevenVerzameling:
         filter_on_height = self.dlg.cb_filterOnHeight.isChecked()
         filter_on_volumetric_weight = self.dlg.cb_filterOnVolumetricWeight.isChecked()
         selected_layer = self.dlg.cmb_layers.currentLayer()
-        database = self.dlg.cmb_databases.currentText()
         trx_bool = self.dlg.cb_TriaxiaalProeven.isChecked()
         sdp_bool = self.dlg.cb_SamendrukkingProeven.isChecked()
         output_location = self.dlg.fileWidget.filePath()

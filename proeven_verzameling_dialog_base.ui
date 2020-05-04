@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>700</height>
+    <height>726</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,7 +34,7 @@
      <verstretch>1</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,1,0,1,1,1,1,0,1">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,1,0,1,1,1,1,0">
     <property name="spacing">
      <number>10</number>
     </property>
@@ -53,9 +53,12 @@
     <item>
      <widget class="QLabel" name="label_10">
       <property name="text">
-       <string>Selecteer de punten in de boringen in de laag die je wil exporteren.</string>
+       <string>Selecteer de laag met boring punten geselecteerd:</string>
       </property>
      </widget>
+    </item>
+    <item>
+     <widget class="QgsMapLayerComboBox" name="cmb_layers"/>
     </item>
     <item>
      <spacer name="verticalSpacer_2">
@@ -69,9 +72,6 @@
        </size>
       </property>
      </spacer>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2"/>
     </item>
     <item alignment="Qt::AlignVCenter">
      <widget class="QgsCollapsibleGroupBox" name="cb_filterOnHeight">
@@ -647,20 +647,26 @@
       </property>
      </spacer>
     </item>
-    <item>
-     <widget class="QDialogButtonBox" name="buttonBox">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="standardButtons">
-       <set>QDialogButtonBox::Close|QDialogButtonBox::Ok|QDialogButtonBox::RestoreDefaults</set>
-      </property>
-      <property name="centerButtons">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
    </layout>
+  </widget>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>680</y>
+     <width>530</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Close|QDialogButtonBox::Ok|QDialogButtonBox::RestoreDefaults</set>
+   </property>
+   <property name="centerButtons">
+    <bool>false</bool>
+   </property>
   </widget>
  </widget>
  <customwidgets>
@@ -674,6 +680,11 @@
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>QgsMapLayerComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qgsmaplayercombobox.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
