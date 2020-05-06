@@ -815,15 +815,18 @@ class ProevenVerzamelingTask(QgsTask):
                         # can replicate the SQL filters
                         #            
                         # Calculate the least squares estimate of the S en T and add them to a dataframe list
+
+                        df = df_trx_results.query('GTM_ID in [{}]'.format(','.join(gtm_ids)))
+
                         fi, coh, E, E_per_n, eps, N, fig = self.qb.get_least_squares(                            
-                            self.qb.get_trx_dlp_result(gtm_ids),
+                            df,
                             ea=ea,
                             plot_name='Least Squares Analysis, ea: ' +
                             str(ea) + '\n' + key,
                             save_plot=self.save_plot
                         )
                         fig_list.append(fig)
-                        df_lst_temp = pd.DataFrame(index=[key], data=[[vg_min, vg_max, fi, coh, E, E_per_n, eps, N]],
+                        df_lst_temp = pd.DataFrame(index=[key], data=[[round(vg_min, 1), round(vg_max, 1), fi, coh, E, E_per_n, eps, N]],
                                                 columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
                         ls_list.append(df_lst_temp)
                 if len(ls_list) > 0:
