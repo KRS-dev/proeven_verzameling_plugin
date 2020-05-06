@@ -172,10 +172,9 @@ class qgis_backend:
                             g_mon_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             g_mon_df.columns = colnames
-                            g_mon_df = g_mon_df.set_index('GTM_ID')
                             g_mon_df['Z_COORDINAAT_LAAG'] = pd.to_numeric(
                                 g_mon_df['Z_COORDINAAT_LAAG'])
-                            df_list.append(g_mon_df)
+                            df_list.append(g_mon_df, ignore_index=True)
                     g_mon_df_all = pd.concat(df_list)
                     if g_mon_df_all.empty is False:
                         return g_mon_df_all
