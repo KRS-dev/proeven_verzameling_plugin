@@ -174,8 +174,8 @@ class qgis_backend:
                             g_mon_df.columns = colnames
                             g_mon_df['Z_COORDINAAT_LAAG'] = pd.to_numeric(
                                 g_mon_df['Z_COORDINAAT_LAAG'])
-                            df_list.append(g_mon_df, ignore_index=True)
-                    g_mon_df_all = pd.concat(df_list)
+                            df_list.append(g_mon_df)
+                    g_mon_df_all = pd.concat(df_list, ignore_index=True)
                     if g_mon_df_all.empty is False:
                         return g_mon_df_all
                     '''else:
