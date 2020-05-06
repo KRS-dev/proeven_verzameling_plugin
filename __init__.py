@@ -32,5 +32,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .db_connect import dbconnect
-    return dbconnect(iface)
+    from .proeven_verzameling import ProevenVerzameling
+    return ProevenVerzameling(iface)

@@ -3,17 +3,17 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=db connect
+name=Proeven Verzameling
 qgisMinimumVersion=3.0
-description=Queries chosen features to a database
-version=0.1
+description=Queries chosen features from a BIS database
+version=0.2
 author=Kevin Schuurman
 email=k.schuurman1@rotterdam.nl
 
 about=Provide a brief description of the plugin and its purpose.
 
 tracker=http://bugs
-repository=http://repo
+repository=https://github.com/KRS-dev/proeven_verzameling_plugin
 # End of mandatory metadata
 
 # Recommended items:

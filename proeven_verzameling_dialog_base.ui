@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>600</width>
-    <height>700</height>
+    <height>726</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -34,7 +34,7 @@
      <verstretch>1</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0,0,1,1,0,1,1,1,1,1,1">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,0,1,1,0,1,1,1,1,0">
     <property name="spacing">
      <number>10</number>
     </property>
@@ -53,34 +53,25 @@
     <item>
      <widget class="QLabel" name="label_10">
       <property name="text">
-       <string>Laag met Boring ID's</string>
+       <string>Selecteer de laag met boring punten geselecteerd:</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QgsMapLayerComboBox" name="cmb_layers">
-      <property name="toolTip">
-       <string>Selecteer hier de laag waarin Boor Locatie ID's (loc_id) te vinden zijn.</string>
-      </property>
-     </widget>
+     <widget class="QgsMapLayerComboBox" name="cmb_layers"/>
     </item>
     <item>
-     <widget class="QLabel" name="label_9">
-      <property name="text">
-       <string>Database:</string>
+     <spacer name="verticalSpacer_2">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <widget class="QComboBox" name="cmb_databases">
-        <property name="toolTip">
-         <string>Selecteer hier verwijzing naar de BIS database.</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>30</height>
+       </size>
+      </property>
+     </spacer>
     </item>
     <item alignment="Qt::AlignVCenter">
      <widget class="QgsCollapsibleGroupBox" name="cb_filterOnHeight">
@@ -317,7 +308,7 @@
        <number>10</number>
       </property>
       <item>
-       <widget class="QGroupBox" name="verticalGroupBox">
+       <widget class="QGroupBox" name="cb_TriaxiaalProeven">
         <property name="toolTip">
          <string>Selecteer als u de Triaxiaal proeven wilt opvragen.</string>
         </property>
@@ -503,7 +494,10 @@
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="cb_showPlot">
+          <widget class="QCheckBox" name="cb_savePlot">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="toolTip">
             <string>Laat de grafieken voor de berekening van de statistiek zien.</string>
            </property>
@@ -519,7 +513,10 @@
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="verticalGroupBox_2">
+       <widget class="QGroupBox" name="cb_SamendrukkingProeven">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="toolTip">
          <string>Vul hier in over welke intervallen je statistische analyses wil maken.</string>
         </property>
@@ -531,6 +528,9 @@
         </property>
         <property name="checkable">
          <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <property name="sizeConstraint">
@@ -597,7 +597,7 @@
     <item>
      <widget class="QLabel" name="label_3">
       <property name="text">
-       <string>Excel File Naam:</string>
+       <string>Excel Uitvoernaam:</string>
       </property>
      </widget>
     </item>
@@ -623,7 +623,7 @@
     <item>
      <widget class="QLabel" name="label_4">
       <property name="text">
-       <string>Output Directory:</string>
+       <string>Uitvoermap</string>
       </property>
      </widget>
     </item>
@@ -642,25 +642,31 @@
       <property name="sizeHint" stdset="0">
        <size>
         <width>20</width>
-        <height>60</height>
+        <height>30</height>
        </size>
       </property>
      </spacer>
     </item>
-    <item>
-     <widget class="QDialogButtonBox" name="buttonBox">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="standardButtons">
-       <set>QDialogButtonBox::Close|QDialogButtonBox::Open|QDialogButtonBox::Reset</set>
-      </property>
-      <property name="centerButtons">
-       <bool>false</bool>
-      </property>
-     </widget>
-    </item>
    </layout>
+  </widget>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>680</y>
+     <width>530</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Close|QDialogButtonBox::Ok|QDialogButtonBox::RestoreDefaults</set>
+   </property>
+   <property name="centerButtons">
+    <bool>false</bool>
+   </property>
   </widget>
  </widget>
  <customwidgets>
