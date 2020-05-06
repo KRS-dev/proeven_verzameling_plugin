@@ -34,7 +34,7 @@ Step 1: Connecting to the Oracle database in QGIS.
 
 Step 2: Importing BIS_GRAF_LOC_AANDUIDINGEN into your QGIS project.
 
-![BIS_GRAF_LOC_AANDUIDINGEN](/images/BIS_GRAF_LOC_AANDUIGINGEN.png)
+![BIS_GRAF_LOC_AANDUIDINGEN](/images/BIS_GRAF_LOC_AANDUIDINGEN.png)
 
 Step 3: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
