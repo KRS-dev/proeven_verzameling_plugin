@@ -26,7 +26,7 @@ import pandas as pd
 import numpy as np
 import cx_Oracle
 
-from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication
+from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication, QgsVectorLayer
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, QRegExp
 from qgis.PyQt.QtGui import QIcon, QRegExpValidator
 from qgis.PyQt.QtWidgets import QAction, QDialogButtonBox, QProgressDialog
@@ -227,6 +227,7 @@ class ProevenVerzameling:
                 }
         try:
             # General Asserts
+            assert isinstance(selected_layer, QgsVectorLayer), 'De geselecteerde laag \'{}\' is geen vector laag.'.format(selected_layer.name())
             assert output_name, 'Het veld \'uitvoernaam\' mag niet leeg zijn.'
             assert output_location, 'Het veld \'uitvoermap\' mag niet leeg zijn.' 
 
@@ -718,7 +719,7 @@ class ProevenVerzamelingTask(QgsTask):
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
-                df_dict[key].to_excel(writer, sheet_name=key)
+                df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
 
             self.setProgress(90)
             
