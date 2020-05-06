@@ -20,7 +20,7 @@ These instructions will get you a copy of the plugin up and running on your loca
   * numpy
   * matplotlib
   * pandas
-  * xlwt
+  * xlsxwriter
 
 ### Installing
 
@@ -32,7 +32,11 @@ Step 1: Connecting to the Oracle database in QGIS.
 ![new connection](/images/new_connection.png)
 ![GitHub Logo](/images/connection_window.PNG)
 
-Step 2: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
+Step 2: Importing BIS_GRAF_LOC_AANDUIDINGEN into your QGIS project.
+
+![BIS_GRAF_LOC_AANDUIDINGEN](/images/BIS_GRAF_LOC_AANDUIGINGEN.png)
+
+Step 3: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
 ![install from ZIP](/images/install_from_zip.PNG)
 
