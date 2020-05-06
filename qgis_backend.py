@@ -104,7 +104,7 @@ class qgis_backend:
                             meetp_df.GDS_ID = pd.to_numeric(
                                 meetp_df.GDS_ID, downcast='integer')
                             df_list.append(meetp_df)
-                    meetp_df_all = pd.concat(df_list, ignore_index=True)
+                    meetp_df_all = pd.concat(df_list)
                     if meetp_df_all.empty is False:
                         return meetp_df_all
                     else:
@@ -137,8 +137,9 @@ class qgis_backend:
                             geod_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             geod_df.columns = colnames
+                            geod_df = geod_df.set_index('GDS_ID')
                             df_list.append(geod_df)
-                    geod_df_all = pd.concat(df_list, ignore_index=True)
+                    geod_df_all = pd.concat(df_list)
                     if geod_df_all.empty is False:
                         return geod_df_all
                     '''else:
@@ -171,6 +172,7 @@ class qgis_backend:
                             g_mon_df = pd.DataFrame(fetched)
                             colnames = [desc[0] for desc in description]
                             g_mon_df.columns = colnames
+                            g_mon_df = g_mon_df.set_index('GTM_ID')
                             g_mon_df['Z_COORDINAAT_LAAG'] = pd.to_numeric(
                                 g_mon_df['Z_COORDINAAT_LAAG'])
                             df_list.append(g_mon_df)
