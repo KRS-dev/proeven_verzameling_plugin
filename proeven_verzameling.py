@@ -876,10 +876,10 @@ class ProevenVerzamelingTask(QgsTask):
                 for i, row in sdp_slice.iterrows():
                     gtm_id = row['GTM_ID']
                     grensspanning = row[['KOPPEJAN_PG', 'BJERRUM_PG']]
-                    print(grensspanning)
                     df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning)) & (df_sdp_result['STEP'] == 4)]
-                    print(df)
-                    rows.append(df.loc(df['STEP'] == 4))
+                    for i, row in df.iterrows():
+                        print(row)
+                        rows.append(row)
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows, ignore_index=False)
