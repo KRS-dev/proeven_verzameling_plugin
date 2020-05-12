@@ -717,12 +717,12 @@ class ProevenVerzamelingTask(QgsTask):
             output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
         
         shutil.copy(
-            os.path.join(self.ProevenVerzameling.plugin_dir, r'data\NEN 9997.xlsx'), 
+            os.path.join(self.ProevenVerzameling.plugin_dir, r'data\NEN 9997.xlsx'),
             output_file_dir)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         # left out: writer in append mode so that the NEN tables are kept
-        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
+        with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='a') as writer:
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
                 df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
