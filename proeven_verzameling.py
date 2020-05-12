@@ -874,12 +874,13 @@ class ProevenVerzamelingTask(QgsTask):
 
                 rows = []
                 for i, row in sdp_slice.iterrows():
-                    gtm_id = sdp_slice['GTM_ID'][i]
-                    grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG', 'BJERRUM_PG']]
+                    gtm_id = row['GTM_ID']
+                    grensspanning = row['KOPPEJAN_PG', 'BJERRUM_PG']
                     print(grensspanning)
-                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
-                    row.append(df.loc(df['STEP'] == 4))
-                    
+                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning)) & (df_sdp_result['STEP'] == 4)]
+                    print(df)
+                    rows.append(df.loc(df['STEP'] == 4))
+
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows, ignore_index=False)
                 df_out = df_out.iloc[:, 3:]
