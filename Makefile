@@ -50,7 +50,7 @@ UI_FILES = proeven_verzameling_dialog_base.ui
 
 EXTRAS = metadata.txt icon.png
 
-EXTRA_DIRS =
+EXTRA_DIRS = data
 
 COMPILED_RESOURCE_FILES = resources.py
 

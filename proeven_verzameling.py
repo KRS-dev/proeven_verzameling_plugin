@@ -22,6 +22,7 @@
  ***************************************************************************/
 """
 import os
+import shutil
 import pandas as pd
 import numpy as np
 import cx_Oracle
@@ -713,9 +714,11 @@ class ProevenVerzamelingTask(QgsTask):
             while os.path.exists(os.path.join(self.output_location, name + '{}.'.format(i) + ext)):
                 i += 1
             output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
+        
+        shutil.copy(r'data/NEN 9997.xlsx', output_file_dir)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
-        # untrue: writer in append mode so that the NEN tables are kept
+        # left out: writer in append mode so that the NEN tables are kept
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
             for key in df_dict:
                 # Writing every dataframe in the dictionary to a different sheet
@@ -808,13 +811,6 @@ class ProevenVerzamelingTask(QgsTask):
                         key = 'Vg: ' + str(round(vg_min, 1)) + \
                             '-' + str(round(vg_max, 1)) + ' kN/m3'
                         # Get the related TRX results...
-                        #
-                        # Potentially the next line could be done without querying the database again
-                        # for the data that is already availabe in the variable df_trx_results
-                        # but I have not found the right type of filter methods in Pandas which
-                        # can replicate the SQL filters
-                        #            
-                        # Calculate the least squares estimate of the S en T and add them to a dataframe list
                         df = df_trx_dlp_result.query('GTM_ID in [{}]'.format(
                             ','.join([str(x) for x in gtm_ids])))
 
@@ -880,14 +876,10 @@ class ProevenVerzamelingTask(QgsTask):
                 for i, row in sdp_slice.iterrows():
                     gtm_id = sdp_slice['GTM_ID'][i]
                     grensspanning = sdp_slice.loc[i, ['KOPPEJAN_PG', 'BJERRUM_PG']]
-                    
+                    print(grensspanning)
                     df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP', axis=0)
+                    row.append(df.loc(df['STEP'] == 4))
                     
-                    load = 0
-                    for i, row in df.iterrows():
-                        if row['LOAD'] > load:
-                            load = row['LOAD']
-                            rows.append(row)
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows, ignore_index=False)
                 df_out = df_out.iloc[:, 3:]

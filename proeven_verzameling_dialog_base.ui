@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>dbconnectDialogBase</class>
- <widget class="QDialog" name="dbconnectDialogBase">
+ <class>ProevenVerzamelingDialogBase</class>
+ <widget class="QDialog" name="ProevenVerzamelingDialogBase">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>db connect</string>
+   <string>Proeven Verzameling Plugin</string>
   </property>
   <widget class="QFrame" name="verticalFrame">
    <property name="geometry">
@@ -696,7 +696,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>dbconnectDialogBase</receiver>
+   <receiver>ProevenVerzamelingDialogBase</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -712,7 +712,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>dbconnectDialogBase</receiver>
+   <receiver>ProevenVerzamelingDialogBase</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">

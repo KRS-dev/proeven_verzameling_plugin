@@ -26,7 +26,7 @@
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load dbconnect class from file dbconnect.
+    """Load ProevenVerzameling class from file proeven_verzameling.
 
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface
