@@ -715,7 +715,9 @@ class ProevenVerzamelingTask(QgsTask):
                 i += 1
             output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
         
-        shutil.copy(r'data/NEN 9997.xlsx', output_file_dir)
+        shutil.copy(
+            os.path.join(self.plugin_dir, r'data\NEN 9997.xlsx'), 
+            output_file_dir)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         # left out: writer in append mode so that the NEN tables are kept
