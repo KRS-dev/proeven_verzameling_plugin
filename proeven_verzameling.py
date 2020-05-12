@@ -330,7 +330,7 @@ class ProevenVerzameling:
             'Initializing Task: BIS Bevraging...', 'Cancel', 0, 100)
         progressDialog.show()
         task = ProevenVerzamelingTask(
-            'Proeven Verzameling Bevraging', self.iface, **args)
+            'Proeven Verzameling Bevraging', self, **args)
         task.progressChanged.connect(
             lambda: progressDialog.setValue(task.progress()))
         progressDialog.canceled.connect(task.cancel)
@@ -566,9 +566,10 @@ class ProevenVerzameling:
 class ProevenVerzamelingTask(QgsTask):
     """Creating a task to run all the heavy processes in the background on a different thread"""
 
-    def __init__(self, description, iface, **kwargs):
+    def __init__(self, description, ProevenVerzameling, **kwargs):
         super().__init__(description, QgsTask.CanCancel)
-        self.iface = iface
+        self.ProevenVerzameling = ProevenVerzameling
+        self.iface = self.ProevenVerzameling.iface
         self.exception = None
 
         self.qb = kwargs.get('qb')
@@ -716,7 +717,7 @@ class ProevenVerzamelingTask(QgsTask):
             output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
         
         shutil.copy(
-            os.path.join(self.plugin_dir, r'data\NEN 9997.xlsx'), 
+            os.path.join(self.ProevenVerzameling.plugin_dir, r'data\NEN 9997.xlsx'), 
             output_file_dir)
 
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
