@@ -890,13 +890,14 @@ class ProevenVerzamelingTask(QgsTask):
                             print(oldrow)
                             break
                         elif row['STEP'] == 4:
+                            print('step 4')
                             rows.append(row)
                             break
                         load = row['LOAD']
                         oldrow = row
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
-                df_out = df_out.append(rows, ignore_index=False)
+                df_out = df_out.append(rows)
                 df_out = df_out.iloc[:, 3:]
                 sdp_stat = df_out.agg(['mean', 'std', 'count'])
 
