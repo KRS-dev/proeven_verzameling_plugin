@@ -732,6 +732,18 @@ class ProevenVerzamelingTask(QgsTask):
                 else:
                     # Writing every dataframe in the dictionary to a different sheet
                     df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
+                
+                if isinstance(df_dict[key], list):
+                    columnnames = df_dict[key][0].columns
+                else:
+                    columnnames = df_dict[key].columns
+
+                sheet = writer.sheets[key]
+                # Sets the width of each column
+                i = 0
+                for colname in columns:
+                    sheet.set_column(i, i, len(colname) * 1.3)
+                    i += 1
 
             self.setProgress(90)
             
