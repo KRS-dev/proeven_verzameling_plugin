@@ -876,15 +876,18 @@ class ProevenVerzamelingTask(QgsTask):
                 sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
 
                 rows = []
-                for i, row in sdp_slice.iterrows():
-                    gtm_id = row['GTM_ID']
-                    grensspanning = row[['KOPPEJAN_PG', 'BJERRUM_PG']]
+                for i, sdprow in sdp_slice.iterrows():
+                    gtm_id = sdprow['GTM_ID']
+                    grensspanning = sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']]
                     df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP')
                     load = 0
                     oldrow = None
                     for i, row in df.iterrows():
                         if row['LOAD'] < load:
                             rows.append(oldrow)
+                            print('oldrow added')
+                            print(row)
+                            print(oldrow)
                             break
                         elif row['STEP'] == 4:
                             rows.append(row)
