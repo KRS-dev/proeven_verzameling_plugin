@@ -894,6 +894,7 @@ class ProevenVerzamelingTask(QgsTask):
                             rows.append(row)
                             break
                         load = row['LOAD']
+                        print(load)
                         oldrow = row
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
