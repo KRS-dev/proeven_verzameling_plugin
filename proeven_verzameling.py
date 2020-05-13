@@ -742,7 +742,7 @@ class ProevenVerzamelingTask(QgsTask):
 
                 sheet = writer.sheets[key]
                 # Sets the width of each column
-                sheet.set_column(0,0, len(indexname) * 1.5)
+                sheet.set_column(0, 0, 10)
                 for i, colname in enumerate(columnnames):
                     n = i + 1 
                     sheet.set_column(n, n, len(colname) * 1.25)
