@@ -883,15 +883,16 @@ class ProevenVerzamelingTask(QgsTask):
                     load = 0
                     oldrow = None
                     for i, row in df.iterrows():
-                        if (row['LOAD'] < load) & (oldrow['LOAD'] > grensspanning):
+                        if (row['LOAD'] < load) & (row['LOAD'] > grensspanning):
                             rows.append(oldrow)
                             print('oldrow added')
                             print(row)
                             print(oldrow)
                             break
-                        elif (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
-                            rows.append(row)
-                            break
+                        if oldrow is not None:
+                            if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
+                                rows.append(row)
+                                break
                         oldrow = row
                         load = row['LOAD']
 
