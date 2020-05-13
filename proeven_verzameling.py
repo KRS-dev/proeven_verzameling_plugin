@@ -883,7 +883,8 @@ class ProevenVerzamelingTask(QgsTask):
                     load = 0
                     oldrow = None
                     for i, row in df.iterrows():
-                        if row['LOAD'] < load:
+                        print('NEW LOAD: ', row['LOAD'], type(row['LOAD']))
+                        if (row['LOAD'] < load):
                             rows.append(oldrow)
                             print('oldrow added')
                             print(row)
@@ -893,10 +894,9 @@ class ProevenVerzamelingTask(QgsTask):
                             rows.append(row)
                             break
                         load = row['LOAD']
-                        print(load)
+                        print('LOAD:', load)
                         oldrow = row
-                        print('row: ', row)
-                        print('oldrow: ', oldrow)
+                        print('STEP: ', row['STEP'])
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
