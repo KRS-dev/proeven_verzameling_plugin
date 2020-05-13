@@ -878,25 +878,22 @@ class ProevenVerzamelingTask(QgsTask):
                 rows = []
                 for i, sdprow in sdp_slice.iterrows():
                     gtm_id = sdprow['GTM_ID']
-                    grensspanning = sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']]
-                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id) & (df_sdp_result['LOAD'] > np.max(grensspanning))].sort_values('STEP')
+                    grensspanning = np.max(sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']])
+                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id)].sort_values('STEP')
                     load = 0
                     oldrow = None
                     for i, row in df.iterrows():
-                        print('NEW LOAD: ', row['LOAD'], type(row['LOAD']))
-                        if (row['LOAD'] < load):
+                        if (row['LOAD'] < load) & (oldrow['LOAD'] > grensspaning):
                             rows.append(oldrow)
                             print('oldrow added')
                             print(row)
                             print(oldrow)
                             break
-                        elif row['STEP'] == 4:
+                        elif (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
                             rows.append(row)
                             break
-                        load = row['LOAD']
-                        print('LOAD:', load)
                         oldrow = row
-                        print('STEP: ', row['STEP'])
+                        load = row['LOAD']
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
