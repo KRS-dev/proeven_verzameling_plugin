@@ -724,8 +724,14 @@ class ProevenVerzamelingTask(QgsTask):
         # left out: writer in append mode so that the NEN tables are kept
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
             for key in df_dict:
-                # Writing every dataframe in the dictionary to a different sheet
-                df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
+                if isinstance(df_dict[key], list):
+                    row = 0
+                    for df in df_dict[key]:
+                        df.to_excel(writer, sheet_name=key, startrow=row)
+                        row = row + len(df.index) + 2
+                else:
+                    # Writing every dataframe in the dictionary to a different sheet
+                    df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
 
             self.setProgress(90)
             
@@ -871,6 +877,7 @@ class ProevenVerzamelingTask(QgsTask):
                 Vgmin = self.volG_sdp[0:-1]
 
             sdp_stat_list = []
+            sdp_stat_data_list = []
             for vgmin, vgmax in zip(Vgmin, Vgmax):
                 sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] < vgmax)]
                 sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
@@ -895,20 +902,28 @@ class ProevenVerzamelingTask(QgsTask):
                                 break
                         oldrow = row
                         load = row['LOAD']
+                
+                vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
-                df_out = df_out.iloc[:, 3:]
-                sdp_stat = df_out.agg(['mean', 'std', 'count'])
+                
+                df_out.index.name = vg_str
+                sdp_stat_data_list.append(df_out)
 
-                vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
+                df_out_val = df_out.iloc[:, 3:]
+                sdp_stat = df_out_val.agg(['mean', 'std', 'count'])
+                
                 sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
                 sdp_stat = sdp_stat.T
                 sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
                 sdp_stat_list.append(sdp_stat)
             
             sdp_stat = pd.concat(sdp_stat_list, 1)
-            df_dict.update({'SDP_STAT': sdp_stat})
+            df_dict.update({
+                'SDP_RAW': sdp_stat_data_list,
+                'SDP_STAT': sdp_stat
+                })
 
         return df_dict
 
