@@ -745,7 +745,6 @@ class ProevenVerzamelingTask(QgsTask):
                     n = i + 1 
                     sheet.set_column(n, n, len(colname) * 1.25)
 
-
             self.setProgress(90)
             
             if self.trx_bool:
