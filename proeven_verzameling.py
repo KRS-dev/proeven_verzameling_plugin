@@ -884,8 +884,7 @@ class ProevenVerzamelingTask(QgsTask):
                     oldrow = None
                     for i, row in df.iterrows():
                         if row['LOAD'] < load:
-                            if oldrow is not None:
-                                rows.append(oldrow)
+                            rows.append(oldrow)
                             break
                         elif row['STEP'] == 4:
                             rows.append(row)
@@ -898,7 +897,7 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = df_out.iloc[:, 3:]
                 sdp_stat = df_out.agg(['mean', 'std', 'count'])
 
-                vg_str = 'Vg: {} - {} KN/m^3'.format(vgmin, vgmax)
+                vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
                 sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
                 sdp_stat = sdp_stat.T
                 sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
