@@ -890,7 +890,6 @@ class ProevenVerzamelingTask(QgsTask):
                             print(oldrow)
                             break
                         elif row['STEP'] == 4:
-                            print('step 4')
                             rows.append(row)
                             break
                         load = row['LOAD']
