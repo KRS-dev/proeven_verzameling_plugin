@@ -895,6 +895,8 @@ class ProevenVerzamelingTask(QgsTask):
                         load = row['LOAD']
                         print(load)
                         oldrow = row
+                        print('row: ', row)
+                        print('oldrow: ', oldrow)
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
