@@ -735,10 +735,8 @@ class ProevenVerzamelingTask(QgsTask):
                 
                 if isinstance(df_dict[key], list):
                     columnnames = df_dict[key][0].columns
-                    indexname = df_dict[key][0].index.name
                 else:
                     columnnames = df_dict[key].columns
-                    indexname = df_dict[key].index.name
 
                 sheet = writer.sheets[key]
                 # Sets the width of each column
