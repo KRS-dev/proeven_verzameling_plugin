@@ -735,19 +735,16 @@ class ProevenVerzamelingTask(QgsTask):
                 
                 if isinstance(df_dict[key], list):
                     columnnames = df_dict[key][0].columns
-                    if isinstance(columnnames, pd.MultiIndex):
-                        columnnames = columnnames.levels[-1]
                 else:
                     columnnames = df_dict[key].columns
-                    if isinstance(columnnames, pd.MultiIndex):
-                        columnnames = columnnames.levels[-1]
 
-                sheet = writer.sheets[key]
-                # Sets the width of each column
-                sheet.set_column(0, 0, 10)
-                for i, colname in enumerate(columnnames):
-                    n = i + 1 
-                    sheet.set_column(n, n, len(colname) * 1.25)
+                if not isinstance(columnnames, pd.MultiIndex):
+                    sheet = writer.sheets[key]
+                    # Sets the width of each column
+                    sheet.set_column(0, 0, 10)
+                    for i, colname in enumerate(columnnames):
+                        n = i + 1 
+                        sheet.set_column(n, n, len(colname) * 1.25)
 
             self.setProgress(90)
             
