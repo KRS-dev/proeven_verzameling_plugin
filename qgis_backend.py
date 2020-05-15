@@ -229,7 +229,7 @@ class qgis_backend:
                                 trx_df.columns = colnames
                                 trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE', 'TEREINSPANNING', 'BEZWIJKSNELHEID']] = \
                                     trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE',
-                                            'TEREINSPANNING', 'BEZWIJKSNELHEID']].apply(pd.to_numeric)
+                                            'TEREINSPANNING', 'BEZWIJKSNELHEID']].apply(pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                                 trx_df.VOLUMEGEWICHT_NAT = trx_df.VOLUMEGEWICHT_NAT.astype(
                                     float)
                                 df_list.append(trx_df)
@@ -290,7 +290,7 @@ class qgis_backend:
                             colnames = [desc[0] for desc in description]
                             trx_result_df.columns = colnames
                             trx_result_df[['EA', 'COH', 'FI']] = trx_result_df[[
-                                'EA', 'COH', 'FI']].apply(pd.to_numeric)
+                                'EA', 'COH', 'FI']].apply(pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                             df_list.append(trx_result_df)
                     trx_result_df_all = pd.concat(df_list, ignore_index=True)
                     if trx_result_df_all.empty is False:
@@ -326,7 +326,7 @@ class qgis_backend:
                             colnames = [desc[0] for desc in description]
                             trx_dlp.columns = colnames
                             trx_dlp.loc[:, 'EPS50':] = trx_dlp.loc[:,
-                                                                   'EPS50':].apply(pd.to_numeric)
+                                'EPS50':].apply(pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                             df_list.append(trx_dlp)
                     trx_dlp_all = pd.concat(df_list, ignore_index=True)
                     if trx_dlp_all.empty is False:
@@ -364,7 +364,7 @@ class qgis_backend:
                             trx_dlp_result.rename(
                                 columns={'TPR_EA': 'EA'}, inplace=True)
                             trx_dlp_result.loc[:, 'EA':] = trx_dlp_result.loc[:, 'EA':].apply(
-                                pd.to_numeric)
+                                pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                             df_list.append(trx_dlp_result)
                     trx_dlp_result_all = pd.concat(df_list, ignore_index=True)
                     if trx_dlp_result_all.empty is False:
@@ -529,7 +529,7 @@ class qgis_backend:
                             sdp_df.columns = colnames
                             sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':] = \
                                 sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':].apply(
-                                    pd.to_numeric)
+                                    pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                             df_list.append(sdp_df)
                     sdp_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_df_all.empty is False:
@@ -566,7 +566,7 @@ class qgis_backend:
                             sdp_result_df.columns = colnames
                             sdp_result_df.loc[:, 'LOAD':] = \
                                 sdp_result_df.loc[:, 'LOAD':].apply(
-                                    pd.to_numeric)
+                                    pd.to_numeric).replace({'0':np.nan, 0:np.nan})
                             df_list.append(sdp_result_df)
                     sdp_result_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_result_df_all.empty is False:
