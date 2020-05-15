@@ -529,7 +529,7 @@ class qgis_backend:
                             sdp_df.columns = colnames
                             sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':] = \
                                 sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':].apply(
-                                    pd.to_numeric).replace({'0':np.nan, 0:np.nan})
+                                    pd.to_numeric).replace({0:np.nan})
                             df_list.append(sdp_df)
                     sdp_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_df_all.empty is False:
@@ -566,7 +566,7 @@ class qgis_backend:
                             sdp_result_df.columns = colnames
                             sdp_result_df.loc[:, 'LOAD':] = \
                                 sdp_result_df.loc[:, 'LOAD':].apply(
-                                    pd.to_numeric).replace({'0':np.nan, 0:np.nan})
+                                    pd.to_numeric).replace({0:np.nan})
                             df_list.append(sdp_result_df)
                     sdp_result_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_result_df_all.empty is False:
