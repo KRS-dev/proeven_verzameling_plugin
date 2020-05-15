@@ -891,6 +891,7 @@ class ProevenVerzamelingTask(QgsTask):
 
             sdp_stat_list = []
             sdp_stat_data_list = []
+            sdp_stat_invalid_list = []
             for vgmin, vgmax in zip(Vgmin, Vgmax):
                 sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] < vgmax)]
                 sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
@@ -908,7 +909,6 @@ class ProevenVerzamelingTask(QgsTask):
                                 rows.append(oldrow)
                                 print('oldrow added')
                                 break
-                        
                             if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
                                 rows.append(row)
                                 break
@@ -919,13 +919,19 @@ class ProevenVerzamelingTask(QgsTask):
 
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
-                
                 df_out.index.name = vg_str
+                # Simple outlier detection
+                mean_bjerrum_cc = df_out['BJERRUM_CC'].mean()
+                std_bjerrum_cc = df_out['BJERRUM_CC'].std()
+                selection = np.abs(df_out['BJERRUM_CC'] - mean_bjerrum_cc) < 2*std_bjerrum_cc
+                df_out = df_out[selection]
+                df_invalid = df_out[~selection]
+                sdp_stat_invalid_list.append(df_invalid)
+
                 sdp_stat_data_list.append(df_out)
 
                 df_out_val = df_out.iloc[:, 3:]
                 sdp_stat = df_out_val.agg(['mean', 'std', 'count'])
-                
                 sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
                 sdp_stat = sdp_stat.T
                 sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
@@ -934,6 +940,7 @@ class ProevenVerzamelingTask(QgsTask):
             sdp_stat = pd.concat(sdp_stat_list, 1)
             df_dict.update({
                 'SDP_RAW': sdp_stat_data_list,
+                'SDP_INVALID': sdp_stat_invalid_list,
                 'SDP_STAT': sdp_stat
                 })
 
