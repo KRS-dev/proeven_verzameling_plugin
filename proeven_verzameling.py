@@ -259,8 +259,7 @@ class ProevenVerzameling:
 
             if sdp_bool:
                 if self.dlg.le_vg_sdp.text():
-                    volG_sdp = self.dlg.le_vg_sdp.text().strip(
-                        '[').strip(']').split(',')
+                    volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
                     volG_sdp = [float(x) for x in volG_sdp].sort()
                     if len(volG_sdp) < 2:
                         self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor samendrukkingsproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
@@ -279,6 +278,7 @@ class ProevenVerzameling:
                 assert args['maxVg'] > args['minVg'], 'Maximum volumegewicht moet hoger zijn dan het minimum volumegewicht.'
         except Exception as e:
             self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
+            raise e
             return
 
         source = selected_layer.source()
