@@ -249,7 +249,7 @@ class ProevenVerzameling:
 
                 if self.dlg.le_vg_trx.text():
                     volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
-                    volG_trx = [float(x) for x in volG_trx].sort()
+                    volG_trx = [float(x) for x in volG_trx]
                     if len(volG_trx) < 2:
                         self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor triaxiaalproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
                         volG_trx = None
@@ -260,7 +260,8 @@ class ProevenVerzameling:
             if sdp_bool:
                 if self.dlg.le_vg_sdp.text():
                     volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
-                    volG_sdp = [float(x) for x in volG_sdp].sort()
+                    volG_sdp = [float(x) for x in volG_sdp]
+                    print(volG_sdp.sort())
                     if len(volG_sdp) < 2:
                         self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor samendrukkingsproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
                         volG_sdp = None
