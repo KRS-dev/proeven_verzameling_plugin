@@ -226,61 +226,56 @@ class ProevenVerzameling:
                 'output_location': output_location, 'output_name': output_name,
                 'trx_bool': trx_bool, 'sdp_bool': sdp_bool
                 }
-        try:
-            # General Asserts
-            assert isinstance(selected_layer, QgsVectorLayer), 'De geselecteerde laag \'{}\' is geen vector laag.'.format(selected_layer.name())
-            assert output_name, 'Het veld \'uitvoernaam\' mag niet leeg zijn.'
-            assert output_location, 'Het veld \'uitvoermap\' mag niet leeg zijn.' 
+        
+        # General Asserts
+        assert isinstance(selected_layer, QgsVectorLayer), 'De geselecteerde laag \'{}\' is geen vector laag.'.format(selected_layer.name())
+        assert output_name, 'Het veld \'uitvoernaam\' mag niet leeg zijn.'
+        assert output_location, 'Het veld \'uitvoermap\' mag niet leeg zijn.' 
 
-            if trx_bool:
-                # TRX Asserts
-                assert any([self.dlg.cb_CU.isChecked(), self.dlg.cb_CD.isChecked(), self.dlg.cb_UU.isChecked()]), 'Een van de drie Proeftypes moet aangekruisd worden.'
+        if trx_bool:
+            # TRX Asserts
+            assert any([self.dlg.cb_CU.isChecked(), self.dlg.cb_CD.isChecked(), self.dlg.cb_UU.isChecked()]), 'Een van de drie Proeftypes moet aangekruisd worden.'
+            proef_types = []
+            if self.dlg.cb_CU.isChecked():
+                proef_types.append('CU')
+            if self.dlg.cb_CD.isChecked():
+                proef_types.append('CD')
+            if self.dlg.cb_UU.isChecked():
+                proef_types.append('UU') 
+            args['proef_types'] = proef_types
+            args['ea'] = self.dlg.sb_strain.value()
+            args['save_plot'] = self.dlg.cb_savePlot.isChecked()
 
-                proef_types = []
-                if self.dlg.cb_CU.isChecked():
-                    proef_types.append('CU')
-                if self.dlg.cb_CD.isChecked():
-                    proef_types.append('CD')
-                if self.dlg.cb_UU.isChecked():
-                    proef_types.append('UU') 
-                args['proef_types'] = proef_types
-                args['ea'] = self.dlg.sb_strain.value()
-                args['save_plot'] = self.dlg.cb_savePlot.isChecked()
-
-                if self.dlg.le_vg_trx.text():
-                    volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
-                    volG_trx = [float(x) for x in volG_trx]
-                    if len(volG_trx) < 2:
-                        self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor triaxiaalproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
-                        volG_trx = None
-                else:
+            if self.dlg.le_vg_trx.text():
+                volG_trx = self.dlg.le_vg_trx.text().strip('[').strip(']').split(',')
+                volG_trx = [float(x) for x in volG_trx]
+                if len(volG_trx) < 2:
+                    self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor triaxiaalproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
                     volG_trx = None
-                args['volG_trx'] = volG_trx
+            else:
+                volG_trx = None
+            args['volG_trx'] = volG_trx
 
-            if sdp_bool:
-                if self.dlg.le_vg_sdp.text():
-                    volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
-                    volG_sdp = [float(x) for x in volG_sdp]
-                    print(volG_sdp.sort())
-                    if len(volG_sdp) < 2:
-                        self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor samendrukkingsproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
-                        volG_sdp = None
-                else:
+        if sdp_bool:
+            if self.dlg.le_vg_sdp.text():
+                volG_sdp = self.dlg.le_vg_sdp.text().strip('[').strip(']').split(',')
+                volG_sdp = [float(x) for x in volG_sdp]
+                print(volG_sdp.sort())
+                if len(volG_sdp) < 2:
+                    self.iface.messageBar().pushMessage("Warning", 'Maar 1 volumegewicht interval voor samendrukkingsproeven is gegeven, het interval wordt automatisch gegenereerd.', level=1, duration=5)
                     volG_sdp = None
-                args['volG_sdp'] = volG_sdp
+            else:
+                volG_sdp = None
+            args['volG_sdp'] = volG_sdp
 
-            if filter_on_height:
-                args['maxH'] = self.dlg.sb_maxHeight.value()
-                args['minH'] = self.dlg.sb_minHeight.value()
-                assert args['maxH'] > args['minH'], 'Maximum hoogte moet hoger zijn dan minimum hoogte.'
-            if filter_on_volumetric_weight:
-                args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
-                args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
-                assert args['maxVg'] > args['minVg'], 'Maximum volumegewicht moet hoger zijn dan het minimum volumegewicht.'
-        except Exception as e:
-            self.iface.messageBar().pushMessage("Error", str(e), level=2, duration=5)
-            raise e
-            return
+        if filter_on_height:
+            args['maxH'] = self.dlg.sb_maxHeight.value()
+            args['minH'] = self.dlg.sb_minHeight.value()
+            assert args['maxH'] > args['minH'], 'Maximum hoogte moet hoger zijn dan minimum hoogte.'
+        if filter_on_volumetric_weight:
+            args['maxVg'] = self.dlg.sb_maxVolumetricWeight.value()
+            args['minVg'] = self.dlg.sb_minVolumetricWeight.value()
+            assert args['maxVg'] > args['minVg'], 'Maximum volumegewicht moet hoger zijn dan het minimum volumegewicht.'
 
         source = selected_layer.source()
         uri = QgsDataSourceUri(source)
