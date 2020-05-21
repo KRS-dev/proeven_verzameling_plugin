@@ -904,7 +904,6 @@ class ProevenVerzamelingTask(QgsTask):
                         if oldrow is not None:
                             if (row['LOAD'] < load) & (oldrow['LOAD'] > grensspanning):
                                 rows.append(oldrow)
-                                print('oldrow added')
                                 break
                             if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
                                 rows.append(row)
