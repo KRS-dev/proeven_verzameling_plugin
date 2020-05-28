@@ -1,10 +1,10 @@
-'''
+"""
 Script: qgis_backend.py
 Repository: https://github.com/KRS-dev/proeven_verzameling_plugin
 Author: Kevin Schuurman
 E-mail: kevinschuurman98@gmail.com
 Summary: Base functions for qgis_frontend.py, Querying the data from the proeven verzameling database.
-'''
+"""
 import pandas as pd
 import numpy as np
 #import psycopg2 as psy
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.offsetbox as offsetbox
 
 
-class qgis_backend:
+class QgisBackend:
 
     def __init__(self, host, port, database, username, password):
         self.username = username
