@@ -96,7 +96,8 @@ class ProevenVerzameling:
         Sets up a QgsTask to do the heavy lifting in a background process of QGIS
     reset_ui()
         Reset all inputs to default values in the dialog
-    
+    get_credentials(host, port, database, username=None, password=None, message=None)
+        Runs a QgsCredentials instance to input database credentials    
     """
 
     def __init__(self, iface):
@@ -430,7 +431,7 @@ class ProevenVerzameling:
 
     def get_credentials(self, host, port, database, username=None, password=None, message=None):
         """
-        Runs a QgsCredentials instance to ask for database credentials
+        Runs a QgsCredentials instance to ask for database credentials.
 
         The credentials are tested in a QgisBackend instance using
         test_connection(). Returns \'true\' or \'false\' depending on if the connection
@@ -459,7 +460,10 @@ class ProevenVerzameling:
             \'true\' if connection valid
             \'false\' if connection invalid
             \'exit\' if dialog is canceled
-        qb : QgisBackend
+        qb : QgisBackend object
+            QgisBackend with the database properties initialized
+        errorMessage : str
+            Oracle Database connection error message
         """
         
         uri = QgsDataSourceUri()
