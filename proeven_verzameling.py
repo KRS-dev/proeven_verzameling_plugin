@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 /***************************************************************************
  ProevenVerzameling
@@ -22,10 +21,12 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 import os
 import pandas as pd
 import numpy as np
 import cx_Oracle
+from typing import Union, Optional
 
 # Import all necessary classes from QGIS
 from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication, QgsVectorLayer
@@ -53,8 +54,8 @@ class ProevenVerzameling:
     Attributes
     ----------
     iface : QgsInterface object
-        The current session Qgis interface instance that will be 
-        passed to this class which provides the hook by which you 
+        The current session Qgis interface instance that will be
+        passed to this class which provides the hook by which you
         can manipulate the QGIS application at run time.
     plugin_dir : str
         Plugin directory location.
@@ -74,7 +75,7 @@ class ProevenVerzameling:
     tr(message)
         Get the translation for a string using Qt translation API.
     add_action(
-        icon_path, 
+        icon_path,
         text,
         callback,
         enabled_flag=True,
@@ -97,7 +98,7 @@ class ProevenVerzameling:
     reset_ui()
         Reset all inputs to default values in the dialog
     get_credentials(host, port, database, username=None, password=None, message=None)
-        Runs a QgsCredentials instance to input database credentials    
+        Runs a QgsCredentials instance to input database credentials
     """
 
     def __init__(self, iface):
@@ -191,6 +192,7 @@ class ProevenVerzameling:
             the action (defaults to None)
         parent : QWidget or None, optional
             Parent widget for the new action (defaults to None)
+        
         Returns
         ----------
         QAction
@@ -489,12 +491,78 @@ class ProevenVerzameling:
             return 'exit', qb, errorMessage
  
 class ProevenVerzamelingTask(QgsTask):
-    """Creating a task to run all the heavy processes in the background on a different thread"""
+    """Creating a task to run all the heavy processes in the background on a different
+    thread.
+    
+    This class contains the methods for creating an excel file full with the
+    ProevenVerzameling data.
+    
+    Attributes
+    ----------
+    iface : QgsInterface object
+        The current session Qgis interface instance that will be
+        passed to this class which provides the hook by which you
+        can manipulate the QGIS application at run time
+    exception : Exception or None
+        Caught exception when one of the processing scripts fails
+    qb : QgisBackend object
+        QgisBackend object with initialized database parameters
+    selected_layer : QgsVectorLayer
+        Reference to the selected layer in QGIS
+    output_location : str
+    output_name : str
+    maxH : float or int
+        Maximal GeoMonster height in mNAP (default to 1000)
+    minH : float or int
+        Minimal GeoMonster sample height in mNAP (default to -1000)
+    maxVg : float or int
+        Maximal GeoMonster sample volumetric weight in kN/m3 (default to 40)
+    minVg : float or int
+        Minimal GeoMonster sample volumetric weight in kN/m3 (default to 0)
+    trx_bool : bool
+        Boolean to decide if Triaxiaal proeven will be queried
+    proef_types : list of str
+        Selection of TRX proefsoorten which will be queried (possibilities: 
+        ['CU', 'CD', 'UU'], default to ['CU'])
+    ea : list of int
+        Selection of rek/strain percentages on which TRX statistics 
+        will be calculated (default to [2])
+    volG_trx : list of float or int, optional
+        Intervals on which TRX statistics are calculated (default to None)
+    save_plot : bool
+        Save TRX statistics plots
+    sdp_bool : bool
+        Boolean to decide if Samendrukkingsproeven will be queried
+    volG_sdp : list of float or int, optional
+        Intervals on which SDP statistics are calculated (default to None)
 
-    def __init__(self, description, ProevenVerzameling, **kwargs):
+    Methods
+    ----------
+    run()
+        Is called when the QgsTask is ran in the background
+    finished(result)
+        This function is automatically called when the task has
+        completed (successfully or not)
+    cancel()
+        Runs when QgsTask is canceled
+    get_data()
+        Control method for all the heavy work
+    trx(gtm_ids)
+        Queries TRX proeven and calculates the statistics with the 
+        QgisBackend module
+    sdp(gtm_ids)
+        Queries SDP proeven with QgisBackend and calculates the statistics
+
+    Notes
+    ----------
+    ProevenVerzamelingTask class's methods cannot be incorporated in the main
+    plugin class (ProevenVerzameling) because the heavy work needs to be done in
+    a secondary thread to keep the QGIS application responsive.
+    """
+
+    def __init__(self, description: str, ProevenVerzameling, **kwargs):
         super().__init__(description, QgsTask.CanCancel)
-        self.ProevenVerzameling = ProevenVerzameling
-        self.iface = self.ProevenVerzameling.iface
+        self.iface = ProevenVerzameling.iface
         self.exception = None
 
         self.qb = kwargs.get('qb')
@@ -508,21 +576,29 @@ class ProevenVerzamelingTask(QgsTask):
         
         self.trx_bool = kwargs.get('trx_bool')
         if self.trx_bool:
-            self.ea = kwargs.get('ea', [2])
             self.proef_types = kwargs.get('proef_types', ['CU'])
-            self.volG_trx = kwargs.get('volG_trx')
+            self.ea = kwargs.get('ea', [2])
+            self.volG_trx = kwargs.get('volG_trx', None)
             self.save_plot = kwargs.get('save_plot', False)
 
         self.sdp_bool = kwargs.get('sdp_bool')
         if self.sdp_bool:
             self.volG_sdp = kwargs.get('volG_sdp')
 
-    def run(self):
+    def run(self) -> bool:
         """
-        Is called when the QgsTask is ran in the background. 
-        No exception can be raised inside a QgsTask therefore we catch them only raise
-        them when we are in finished(). Finished() gets called from the main thread and
-        can therefore raise exceptions.
+        Is called when the QgsTask is ran in the background.
+
+        Returns
+        ----------
+        bool
+            When the task is completed without exceptions return True
+
+        Notes
+        ----------
+        No exception can be raised inside a QgsTask therefore we catch
+        them only raise them when we are in finished(). 
+        Finished() is called from the main thread and can therefore raise exceptions.
         """
         try:
             result = self.get_data()
@@ -534,15 +610,20 @@ class ProevenVerzamelingTask(QgsTask):
             self.exception = e
             return False
 
-    def finished(self, result):
+    def finished(self, result: bool):
         """
         This function is automatically called when the task has
         completed (successfully or not).
+
         You implement finished() to do whatever follow-up stuff
         should happen after the task is complete.
         finished is always called from the main thread, so it's safe
         to do GUI operations and raise Python exceptions here.
-        result is the return value from self.run.
+
+        returns
+        ----------
+        result : bool
+            Result is the return value from self.run
         """
         if result:
             self.iface.messageBar().pushMessage(
@@ -570,6 +651,8 @@ class ProevenVerzamelingTask(QgsTask):
                 raise self.exception
 
     def cancel(self):
+        """Runs when QgsTask is canceled."""
+
         self.iface.messageBar().pushMessage(
             'Task "{name}" was canceled.'.format(
                 task=self.description()),
@@ -577,7 +660,15 @@ class ProevenVerzamelingTask(QgsTask):
         super().cancel()
 
     def get_data(self):
-
+        """Control method for all the heavy work.
+        
+        In here QgisBackend will be used to
+         - Get the selected Meetpunten from the QgsVectorLayer
+         - Query the Meetpunten table, GeoDossier table and GeotechMonster table 
+         from the BIS database
+         - Query the TRX and SDP proeven and calculate the statistics
+         - Export all data to an Excel file
+        """
         self.setProgress(0)
 
         output_file = self.output_name + '.xlsx'
@@ -617,7 +708,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.setProgress(30)
 
         if self.trx_bool:
-            dict_trx, dict_lstsq_stat, fig_list, dict_bbn_stat = \
+            dict_trx,  fig_list = \
                 self.trx(df_gm_filt_on_z.GTM_ID)
             df_dict.update(dict_trx)
 
@@ -641,10 +732,6 @@ class ProevenVerzamelingTask(QgsTask):
                 i += 1
             output_file_dir = os.path.join(self.output_location, name + '{}.'.format(i) + ext)
         
-        #shutil.copy(
-        #    os.path.join(self.ProevenVerzameling.plugin_dir, r'data\NEN 9997.xlsx'),
-        #    output_file_dir)
-
         # At the end of the 'with' function it closes the excelwriter automatically, even if there was an error
         # left out: writer in append mode so that the NEN tables are kept
         with pd.ExcelWriter(output_file_dir, engine='xlsxwriter', mode='w') as writer:
@@ -656,7 +743,7 @@ class ProevenVerzamelingTask(QgsTask):
                         row = row + len(df.index) + 2
                 else:
                     # Writing every dataframe in the dictionary to a different sheet
-                    df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1,1))
+                    df_dict[key].to_excel(writer, sheet_name=key, freeze_panes=(1, 1))
                 
                 if isinstance(df_dict[key], list):
                     columnnames = df_dict[key][0].columns
@@ -700,8 +787,25 @@ class ProevenVerzamelingTask(QgsTask):
         self.setProgress(100)
         return True
 
-    def trx(self, gtm_ids):
-            
+    def trx(self, gtm_ids: list[int]):
+        """Queries TRX proeven and calculates the statistics with the 
+        QgisBackend module.
+        
+        Parameters
+        ----------
+        gtm_ids: list[int]
+            Selected Geotechnische monster ids
+        
+        Returns
+        ----------
+        df_dict: dict[pandas.DataFrame or list[pandas.DataFrame]]
+            Returns a dictionary of pd.DataFrames. The key
+            for each DataFrame is the (sheet)name. Multiple pd.DataFrames which need to
+            be exported in a single sheet (such as statistics) are managed by putting
+            them in a list inside the dictionary.
+        fig_list: list[numpy.Figure or None]
+            Statistic plot Figures. If save_plot is False returns list of None.
+        """
         rek_selectie = [self.ea]
 
         df_trx = self.qb.get_trx(gtm_ids, proef_type=self.proef_types)
@@ -716,8 +820,12 @@ class ProevenVerzamelingTask(QgsTask):
 
         self.setProgress(40)
 
-        df_dict = {'BIS_TRX_Proeven': df_trx, 'BIS_TRX_Results': df_trx_results,
-                        'BIS_TRX_DLP': df_trx_dlp, 'BIS_TRX_DLP_Results': df_trx_dlp_result}
+        df_dict = {
+            'BIS_TRX_Proeven': df_trx, 
+            'BIS_TRX_Results': df_trx_results,
+            'BIS_TRX_DLP': df_trx_dlp, 
+            'BIS_TRX_DLP_Results': df_trx_dlp_result
+        }
         df_bbn_stat_dict = {}
         df_lst_sqrs_dict = {}
         fig_list = []
@@ -730,7 +838,7 @@ class ProevenVerzamelingTask(QgsTask):
                     df_trx.VOLUMEGEWICHT_NAT)
                 N = round(len(df_trx.index) / 5) + 1
                 cutoff = 1  # The interval cant be lower than 1 kn/m3
-                if (maxvg-minvg)/N > cutoff:
+                if (maxvg - minvg)/N > cutoff:
                     Vg_linspace = np.linspace(minvg, maxvg, N)
                 else:
                     N = round((maxvg-minvg)/cutoff)
@@ -761,7 +869,7 @@ class ProevenVerzamelingTask(QgsTask):
                         df = df_trx_dlp_result.query('GTM_ID in [{}]'.format(
                             ','.join([str(x) for x in gtm_ids])))
 
-                        fi, coh, E, E_per_n, eps, N, fig = self.qb.get_least_squares(                            
+                        fi, coh, E, E_per_n, eps, N, fig = self.qb.trx_least_squares(                            
                             df,
                             ea=ea,
                             plot_name='Least Squares Analysis, ea: ' +
@@ -777,10 +885,34 @@ class ProevenVerzamelingTask(QgsTask):
                     df_ls_stat.index.name = 'ea: ' + str(ea) + '%'                    
                     df_lst_sqrs_dict.update(
                         {str(ea) + r'% rek least squares fit': df_ls_stat})
-        
-        return df_dict, df_lst_sqrs_dict, fig_list, df_bbn_stat_dict
+            
+            df_dict.update({
+                'Least Squares Vg Stat.': df_lst_sqrs_dict,
+                'bbn_kode Stat.': df_bbn_stat_dict
+            })
 
-    def sdp(self, gtm_ids):
+        return df_dict, fig_list
+
+    def sdp(self, gtm_ids: list[int]) -> dict[str, Union[pd.DataFrame, list[pd.DataFrame]]:
+        """
+        Queries SDP proeven with QgisBackend and calculates the statistics.
+        
+        ...
+
+        Parameters
+        ----------
+        gtm_ids: list[int]
+            Selected Geotechnische monster ids
+        
+        Returns
+        ----------
+        df_dict: dict[pandas.DataFrame or list[pandas.DataFrame]]
+            Returns a dictionary of pd.DataFrame. The key
+            for each DataFrame is the (sheet)name. Multiple pd.DataFrames which need to
+            be exported in a single sheet (such as statistics) are managed by putting
+            them in a list inside the dictionary.
+        """
+
         df_dict = {}
         df_sdp = self.qb.get_sdp(gtm_ids)
         if df_sdp.empty:
