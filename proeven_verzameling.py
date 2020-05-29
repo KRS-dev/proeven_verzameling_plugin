@@ -26,7 +26,7 @@ import os
 import pandas as pd
 import numpy as np
 import cx_Oracle
-from typing import Union, Optional
+from typing import Union
 
 # Import all necessary classes from QGIS
 from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication, QgsVectorLayer
@@ -489,7 +489,8 @@ class ProevenVerzameling:
                 return 'false', qb, errorMessage
         else:
             return 'exit', qb, errorMessage
- 
+
+
 class ProevenVerzamelingTask(QgsTask):
     """Creating a task to run all the heavy processes in the background on a different
     thread.
@@ -893,7 +894,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         return df_dict, fig_list
 
-    def sdp(self, gtm_ids: list[int]) -> dict[str, Union[pd.DataFrame, list[pd.DataFrame]]:
+    def sdp(self, gtm_ids: list[int]) -> dict[str, Union[pd.DataFrame, list[pd.DataFrame]]]:
         """
         Queries SDP proeven with QgisBackend and calculates the statistics.
         
