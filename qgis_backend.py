@@ -373,7 +373,7 @@ class QgisBackend:
                                 trx_df.columns = colnames
                                 trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE', 'TEREINSPANNING', 'BEZWIJKSNELHEID']] = \
                                     trx_df[['VOLUMEGEWICHT_DROOG', 'VOLUMEGEWICHT_NAT', 'WATERGEHALTE',
-                                            'TEREINSPANNING', 'BEZWIJKSNELHEID']].apply(pd.to_numeric).replace({'0':np.nan, 0:np.nan})
+                                            'TEREINSPANNING', 'BEZWIJKSNELHEID']].apply(pd.to_numeric).replace({0: np.nan})
                                 trx_df.VOLUMEGEWICHT_NAT = trx_df.VOLUMEGEWICHT_NAT.astype(
                                     float)
                                 df_list.append(trx_df)
