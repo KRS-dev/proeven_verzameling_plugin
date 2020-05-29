@@ -26,7 +26,7 @@ import os
 import pandas as pd
 import numpy as np
 import cx_Oracle
-from typing import Union
+from typing import Union, List, Dict
 
 # Import all necessary classes from QGIS
 from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication, QgsVectorLayer
@@ -788,7 +788,7 @@ class ProevenVerzamelingTask(QgsTask):
         self.setProgress(100)
         return True
 
-    def trx(self, gtm_ids: list[int]):
+    def trx(self, gtm_ids: List[int]):
         """Queries TRX proeven and calculates the statistics with the 
         QgisBackend module.
         
@@ -894,7 +894,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         return df_dict, fig_list
 
-    def sdp(self, gtm_ids: list[int]) -> dict[str, Union[pd.DataFrame, list[pd.DataFrame]]]:
+    def sdp(self, gtm_ids: List[int]) -> Dict[str, Union[pd.DataFrame, List[pd.DataFrame]]]:
         """
         Queries SDP proeven with QgisBackend and calculates the statistics.
         
