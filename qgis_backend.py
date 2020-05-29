@@ -94,7 +94,7 @@ class QgisBackend:
             user=self.username,
             password=self.password,
             dsn=self.bis_dsn
-        ) as dbcon:
+        ):
             pass
 
     def fetch(self, query, data=None):
@@ -609,8 +609,7 @@ class QgisBackend:
         df_trx_dlp_result,
         plot_name='Lst_Sqrs_name',
         ea=2,
-        save_plot=True
-        ):
+        save_plot=True):
         """
         Creating least square fits on TRX_dlp_results
         
@@ -828,9 +827,6 @@ class QgisBackend:
                     sdp_result_df_all = pd.concat(df_list, ignore_index=True)
                     if sdp_result_df_all.empty is False:
                         return sdp_result_df_all
-                    '''else:
-                        raise ValueError('These selected boring(en): ' + str(values) + \
-                            ' do not contain any SDP_results.')'''
                 else:
                     raise TypeError('Not all inputs are integers')
             else:

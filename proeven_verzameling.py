@@ -761,21 +761,7 @@ class ProevenVerzamelingTask(QgsTask):
 
             self.setProgress(90)
             
-            if self.trx_bool:
-                # Write the multiple dataframes of the same statistical analysis for TRX to the same excel sheet by counting rows
-                if dict_lstsq_stat:
-                    row = 0
-                    for key in dict_lstsq_stat:
-                        dict_lstsq_stat[key].to_excel(
-                            writer, sheet_name='Least Squares Vg Stat.', startrow=row)
-                        row = row + len(dict_lstsq_stat[key].index) + 2
-                if dict_bbn_stat:
-                    row = 0
-                    for key in dict_bbn_stat:
-                        dict_bbn_stat[key].to_excel(
-                            writer, sheet_name='bbn_kode Stat.', startrow=row)
-                        row = row + len(dict_bbn_stat[key].index) + 2
-                
+            if self.trx_bool:  
                 if self.save_plot:
                     i = 1
                     for fig in fig_list:
@@ -827,8 +813,8 @@ class ProevenVerzamelingTask(QgsTask):
             'BIS_TRX_DLP': df_trx_dlp, 
             'BIS_TRX_DLP_Results': df_trx_dlp_result
         }
-        df_bbn_stat_dict = {}
-        df_lst_sqrs_dict = {}
+
+        lstsqrs_list = []
         fig_list = []
         # Doing statistics on the select TRX proeven
         if len(df_trx.index) > 1:
@@ -857,7 +843,7 @@ class ProevenVerzamelingTask(QgsTask):
             self.setProgress(45)
 
             for ea in rek_selectie:
-                ls_list = []
+                df_list = []
                 for vg_max, vg_min in zip(Vgmax, Vgmin):
                     # Make a selection for this volumetric weight interval
                     gtm_ids = self.qb.select_on_vg(
@@ -878,18 +864,16 @@ class ProevenVerzamelingTask(QgsTask):
                             save_plot=self.save_plot
                         )
                         fig_list.append(fig)
-                        df_lst_temp = pd.DataFrame(index=[key], data=[[round(vg_min, 1), round(vg_max, 1), fi, coh, E, E_per_n, eps, N]],
+                        temp = pd.DataFrame(index=[key], data=[[round(vg_min, 1), round(vg_max, 1), fi, coh, E, E_per_n, eps, N]],
                                                 columns=['MIN(VG)', 'MAX(VG)', 'FI', 'COH', 'ABS. SQ. ERR.', 'ABS. SQ. ERR./N', 'MEAN REL. ERR. %', 'N'])
-                        ls_list.append(df_lst_temp)
-                if len(ls_list) > 0:
-                    df_ls_stat = pd.concat(ls_list)
-                    df_ls_stat.index.name = 'ea: ' + str(ea) + '%'                    
-                    df_lst_sqrs_dict.update(
-                        {str(ea) + r'% rek least squares fit': df_ls_stat})
+                        df_list.append(temp)
+                if len(df_list) > 0:
+                    df = pd.concat(df_list)
+                    df.index.name = 'ea: ' + str(ea) + '%'                    
+                    lstsqrs_list.append(df)
             
             df_dict.update({
-                'Least Squares Vg Stat.': df_lst_sqrs_dict,
-                'bbn_kode Stat.': df_bbn_stat_dict
+                'Least Squares Vg Stat.': lstsqrs_list
             })
 
         return df_dict, fig_list
@@ -999,7 +983,7 @@ class ProevenVerzamelingTask(QgsTask):
                 'SDP_RAW': sdp_stat_data_list,
                 'SDP_INVALID': sdp_stat_invalid_list,
                 'SDP_STAT': sdp_stat
-                })
+            })
 
         return df_dict
 
