@@ -947,9 +947,6 @@ class ProevenVerzamelingTask(QgsTask):
                     oldrow = None
                     for i, row in df.iterrows():
                         if oldrow is not None:
-                            if (row['LOAD'] < load) & (oldrow['LOAD'] > grensspanning):
-                                rows.append(oldrow)
-                                break
                             if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
                                 rows.append(row)
                                 break
@@ -961,6 +958,7 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = pd.DataFrame(columns=df_sdp_result.columns)
                 df_out = df_out.append(rows)
                 df_out.index.name = vg_str
+                
                 # Simple outlier detection
                 mean_bjerrum_cc = df_out['BJERRUM_CC'].mean()
                 std_bjerrum_cc = df_out['BJERRUM_CC'].std()
@@ -968,7 +966,6 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = df_out[selection]
                 df_invalid = df_out[~selection]
                 sdp_stat_invalid_list.append(df_invalid)
-
                 sdp_stat_data_list.append(df_out)
 
                 df_out_val = df_out.iloc[:, 3:]
