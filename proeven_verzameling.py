@@ -998,8 +998,8 @@ class ProevenVerzamelingTask(QgsTask):
                         break
                     oldload = load
             
-            step2 = pd.concat(step2_list, 1).T
-            herbelast = pd.concat(herbelast_list, 1).T
+            step2 = pd.concat(step2_list, 1)
+            herbelast = pd.concat(herbelast_list, 1)
             df_dict.update({
                 'step2': step2,
                 'herbelast_stap': herbelast
