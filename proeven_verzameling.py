@@ -993,8 +993,7 @@ class ProevenVerzamelingTask(QgsTask):
                     load = sdprow['LOAD']
                     if oldload > load:
                         step2_list.append(df_temp[df_temp['STEP'] == 2])
-                        herbelast_list.append(df_temp[df_temp['STEP'] == i+1])
-                        
+                        herbelast_list.append(df_temp[df_temp['STEP'] == sdprow['STEP'] + 1])
                         break
                     oldload = load
             
