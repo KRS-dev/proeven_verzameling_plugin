@@ -72,6 +72,8 @@ class ProevenVerzameling:
 
     Methods
     ----------
+    __init__
+        initializer.
     tr(message)
         Get the translation for a string using Qt translation API.
     add_action(
@@ -102,7 +104,7 @@ class ProevenVerzameling:
     """
 
     def __init__(self, iface):
-        """Constructor.
+        """Initializer.
 
         Parameters
         ----------
@@ -943,7 +945,6 @@ class ProevenVerzamelingTask(QgsTask):
                     gtm_id = sdprow['GTM_ID']
                     grensspanning = np.max(sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']])
                     df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id)].sort_values('STEP')
-                    load = 0
                     oldrow = None
                     for i, row in df.iterrows():
                         if oldrow is not None:
@@ -951,7 +952,6 @@ class ProevenVerzamelingTask(QgsTask):
                                 rows.append(row)
                                 break
                         oldrow = row
-                        load = row['LOAD']
                 
                 vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
 
@@ -982,5 +982,27 @@ class ProevenVerzamelingTask(QgsTask):
                 'SDP_STAT': sdp_stat
             })
 
+
+            ## Temporary research
+            step2_list = []
+            herbelast_list = []
+            for gtm in df_sdp_result['GTM_ID'].unique()
+                df_temp = df_sdp_result[df_sdp_result['GTM_ID'] == gtm].sort_values('STEP')
+                oldload = 0
+                for i, sdprow in df_temp.iterrows():
+                    load = sdprow['LOAD']
+                    if oldload > load:
+                        step2_list.append(df_temp[2])
+                        herbelast_list.append(df_temp[i+1])
+                        
+                        break
+                    oldload = load
+            
+            step2 = pd.concat(step2_list, 1).T
+            herbelast = pd.concat(herbelast_list, 1).T
+            df_dict.update({
+                'step2': step2,
+                'herbelast_stap': herbelast
+            })
         return df_dict
 
