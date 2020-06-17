@@ -759,7 +759,7 @@ class ProevenVerzamelingTask(QgsTask):
                     sheet.set_column(0, 0, 10)
                     for i, colname in enumerate(columnnames):
                         n = i + 1 
-                        sheet.set_column(n, n, len(colname) * 1.25)
+                        sheet.set_column(n, n, len(str(colname)) * 1.25)
 
             self.setProgress(90)
             
@@ -998,8 +998,8 @@ class ProevenVerzamelingTask(QgsTask):
                         break
                     oldload = load
             
-            step2 = pd.concat(step2_list, 1).T
-            herbelast = pd.concat(herbelast_list, 1).T
+            step2 = pd.concat(step2_list, 1)
+            herbelast = pd.concat(herbelast_list, 1)
             df_dict.update({
                 'step2': step2,
                 'herbelast_stap': herbelast
