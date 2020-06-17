@@ -986,7 +986,7 @@ class ProevenVerzamelingTask(QgsTask):
             ## Temporary research
             step2_list = []
             herbelast_list = []
-            for gtm in df_sdp_result['GTM_ID'].unique()
+            for gtm in df_sdp_result['GTM_ID'].unique():
                 df_temp = df_sdp_result[df_sdp_result['GTM_ID'] == gtm].sort_values('STEP')
                 oldload = 0
                 for i, sdprow in df_temp.iterrows():
