@@ -972,7 +972,6 @@ class ProevenVerzamelingTask(QgsTask):
             sdp_stat = pd.concat(sdp_stat_list, 1)
             df_dict.update({
                 'SDP_RAW': sdp_stat_data_list,
-                'SDP_INVALID': sdp_stat_invalid_list,
                 'SDP_STAT': sdp_stat
             })
 
