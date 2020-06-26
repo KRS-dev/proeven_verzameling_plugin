@@ -959,13 +959,7 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = df_out.append(rows)
                 df_out.index.name = vg_str
                 
-                # Simple outlier detection
-                mean_bjerrum_cc = df_out['BJERRUM_CC'].mean()
-                std_bjerrum_cc = df_out['BJERRUM_CC'].std()
-                selection = np.abs(df_out['BJERRUM_CC'] - mean_bjerrum_cc) < 2*std_bjerrum_cc
-                df_out = df_out[selection]
-                df_invalid = df_out[~selection]
-                sdp_stat_invalid_list.append(df_invalid)
+
                 sdp_stat_data_list.append(df_out)
 
                 df_out_val = df_out.iloc[:, 3:]
@@ -982,32 +976,5 @@ class ProevenVerzamelingTask(QgsTask):
                 'SDP_STAT': sdp_stat
             })
 
-
-            ## Temporary research
-            step2_list = []
-            herbelast_list = []
-            for gtm in df_sdp_result['GTM_ID'].unique():
-                df_temp = df_sdp_result[df_sdp_result['GTM_ID'] == gtm].sort_values('STEP')
-                oldload = 0
-                for i, sdprow in df_temp.iterrows():
-                    load = sdprow['LOAD']
-                    if oldload > load:
-                        if sdprow['STEP'] > 2:
-                            if not df_temp[df_temp['STEP'] == sdprow['STEP'] + 1]['LOAD'].empty:
-                                step2_list.append(df_temp[df_temp['STEP'] == 2])
-                                if load > df_temp[df_temp['STEP'] == sdprow['STEP'] + 1]['LOAD'].iloc[0]:
-                                    herbelast_list.append(df_temp[df_temp['STEP'] == sdprow['STEP'] + 2])
-                                else:
-                                    herbelast_list.append(df_temp[df_temp['STEP'] == sdprow['STEP'] + 1])
-                            break
-                        break
-                    oldload = load
-            
-            step2 = pd.concat(step2_list, 0)
-            herbelast = pd.concat(herbelast_list, 0)
-            df_dict.update({
-                'step2': step2,
-                'herbelast_stap': herbelast
-            })
         return df_dict
 
