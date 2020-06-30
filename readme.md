@@ -28,7 +28,7 @@ A step by step series of examples that tell you how to get [proeven_verzameling_
 
 
 
-Step 1: Download the .zip file of the repository 
+Step 1: Download the .zip file from the repository 
 
 Step 2: Install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
