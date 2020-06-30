@@ -27,16 +27,10 @@ These instructions will get you a copy of the plugin up and running on your loca
 A step by step series of examples that tell you how to get [proeven_verzameling_plugin](https://github.com/KRS-dev/proeven_verzameling_plugin) running in your QGIS build.
 
 
-Step 1: Connecting to the Oracle database in QGIS.
 
-![new connection](/images/new_connection.png)
-![GitHub Logo](/images/connection_window.PNG)
+Step 1: Download the .zip file of the repository 
 
-Step 2: Importing BIS_GRAF_LOC_AANDUIDINGEN into your QGIS project.
-
-![BIS_GRAF_LOC_AANDUIDINGEN](/images/BIS_GRAF_LOC_AANDUIDINGEN.png)
-
-Step 3: Download the .zip file of the repository and install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
+Step 2: Install it using __Install from ZIP__ in QGIS under __Plugins__ -> __Manage and Install Plugins...__
 
 ![install from ZIP](/images/install_from_zip.PNG)
 
@@ -49,7 +43,16 @@ A small icon, ![icon](/icon.png), should now show up in your QGIS toolbar. If yo
 
 ## Deployment
 
-Add additional notes about how to deploy this on a live system
+Plug-in creates a database connection through the login information in the Parameter layer in QGIS. 
+Therefore to make the plug-in work:
+
+Step 1: Import the Parameter layer (or make your own). Opening the QGIS project with the Parameter layer works as well.
+
+Step 2: Select points in the Parameter layer that you want fetched.
+
+Step 3: Start the Plug-in and select the Parameter layer in the top combobox in the plug-in window.
+
+![Plugin Window](/images/plugin_window.PNG)
 
 ## Built With
 
