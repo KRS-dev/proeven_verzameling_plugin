@@ -568,6 +568,7 @@ class ProevenVerzamelingTask(QgsTask):
         super().__init__(description, QgsTask.CanCancel)
         self.iface = ProevenVerzameling.iface
         self.exception = None
+        self.warnings = None
 
         self.qb = kwargs.get('qb')
         self.selected_layer = kwargs.get('selected_layer')
@@ -605,7 +606,9 @@ class ProevenVerzamelingTask(QgsTask):
         Finished() is called from the main thread and can therefore raise exceptions.
         """
         try:
-            result = self.get_data()
+            with warnings.catch_warnings(record=True) as ws:
+                result = self.get_data()
+                self.warnings = ws
             if result:
                 return True
             else:
@@ -636,7 +639,25 @@ class ProevenVerzamelingTask(QgsTask):
                     duration=round(self.elapsedTime()/1000, 2)),
                 Qgis.Info,
                 duration=3)
+            if self.warnings:
+                for warning in warnings:
+                    self.iface.messageBar().pushMessage(
+                        'Task "{name}" threw a warning: "{warning}"'.format(
+                            name=self.description(),
+                            warning=warning.message),
+                        Qgis.Warning,
+                        duration=3
+                    )
         else:
+            if self.warnings:
+                for warning in warnings:
+                    self.iface.messageBar().pushMessage(
+                        'Task "{name}" threw a warning: "{warning}"'.format(
+                            name=self.description(),
+                            warning=warning.message),
+                        Qgis.Warning,
+                        duration=3
+                    )
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
                     'Task: "{name}" not successful but without '
