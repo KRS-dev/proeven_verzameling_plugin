@@ -638,9 +638,10 @@ class ProevenVerzamelingTask(QgsTask):
                     self.iface.messageBar().pushMessage(
                         'Task: "{name}" threw a warning: {warning}.'.format(
                             name=self.description(),
-                            warning=warning.message,
+                            warning=warning.message),
                         Qgis.Warning,
-                        duration=3)
+                        duration=3
+                    )
             self.iface.messageBar().pushMessage(
                 'Task: "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
@@ -653,9 +654,10 @@ class ProevenVerzamelingTask(QgsTask):
                     self.iface.messageBar().pushMessage(
                         'Task: "{name}" threw a warning: {warning}.'.format(
                             name=self.description(),
-                            warning=warning.message,
+                            warning=warning.message),
                         Qgis.Warning,
-                        duration=3)
+                        duration=3
+                    )
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
                     'Task: "{name}" was not successful but without '
