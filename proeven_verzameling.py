@@ -804,6 +804,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         df_trx = self.qb.get_trx(gtm_ids, proef_type=self.proef_types)
         if df_trx is None:
+            warnings.warn('De geselecteerde meetpunten bevatten geen triaxiaalproeven.')
             return None, None
 
         df_trx = self.qb.select_on_vg(df_trx, self.maxVg, self.minVg)
