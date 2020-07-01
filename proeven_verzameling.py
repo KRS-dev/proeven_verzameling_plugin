@@ -936,7 +936,7 @@ class ProevenVerzamelingTask(QgsTask):
             sdp_stat_list = []
             sdp_stat_data_list = []
             for vgmin, vgmax in zip(Vgmin, Vgmax):
-                sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] < vgmax)]
+                sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] <= vgmax)]
                 sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
 
                 rows = []
@@ -958,7 +958,6 @@ class ProevenVerzamelingTask(QgsTask):
                 df_out = df_out.append(rows)
                 df_out.index.name = vg_str
                 
-
                 sdp_stat_data_list.append(df_out)
 
                 df_out_val = df_out.iloc[:, 3:]
