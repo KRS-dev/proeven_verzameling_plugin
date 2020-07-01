@@ -377,7 +377,7 @@ class QgisBackend:
                                 trx_df.VOLUMEGEWICHT_NAT = trx_df.VOLUMEGEWICHT_NAT.astype(
                                     float)
                                 df_list.append(trx_df)
-                        if not df_list:
+                        if df_list:
                             trx_df_all = pd.concat(df_list, ignore_index=True)
                             return trx_df_all
                         '''else:
@@ -466,7 +466,7 @@ class QgisBackend:
                             trx_result_df[['EA', 'COH', 'FI']] = trx_result_df[[
                                 'EA', 'COH', 'FI']].apply(pd.to_numeric).replace({0: np.nan})
                             df_list.append(trx_result_df)
-                    if not df_list:
+                    if df_list:
                         trx_result_df_all = pd.concat(df_list, ignore_index=True)
                         return trx_result_df_all
                 else:
@@ -511,7 +511,7 @@ class QgisBackend:
                             trx_dlp.loc[:, 'EPS50':] = trx_dlp.loc[:,
                                 'EPS50':].apply(pd.to_numeric).replace({0: np.nan})
                             df_list.append(trx_dlp)
-                    if not df_list:
+                    if df_list:
                         trx_dlp_all = pd.concat(df_list, ignore_index=True)
                         return trx_dlp_all
                 else:
@@ -558,7 +558,7 @@ class QgisBackend:
                             trx_dlp_result.loc[:, 'EA':] = trx_dlp_result.loc[:, 'EA':].apply(
                                 pd.to_numeric).replace({0: np.nan})
                             df_list.append(trx_dlp_result)
-                    if not df_list:
+                    if df_list:
                         trx_dlp_result_all = pd.concat(df_list, ignore_index=True)
                         return trx_dlp_result_all
                 else:
@@ -778,7 +778,7 @@ class QgisBackend:
                                 sdp_df.loc[:, 'VOLUMEGEWICHT_DROOG':].apply(
                                     pd.to_numeric).replace({0: np.nan})
                             df_list.append(sdp_df)
-                    if not df_list:
+                    if df_list:
                         sdp_df_all = pd.concat(df_list, ignore_index=True)
                         return sdp_df_all
                 else:
@@ -824,7 +824,7 @@ class QgisBackend:
                                 sdp_result_df.loc[:, 'LOAD':].apply(
                                     pd.to_numeric).replace({0: np.nan})
                             df_list.append(sdp_result_df)
-                    if not df_list:
+                    if df_list:
                         sdp_result_df_all = pd.concat(df_list, ignore_index=True)
                         return sdp_result_df_all
                 else:
