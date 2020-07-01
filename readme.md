@@ -73,10 +73,12 @@ Step 4: Fill in the rest of the dialog window and click ok.
 
 Needs to be filled
 
+\
+\
+\
+\
 
-
-
-
+    
 # Proeven_verzameling plugin - Nederlands
 
 QGIS plug-in om automatisch geotechnische data op te vragen uit de BIS database. Vervolg van [proeven_verzameling](https://github.com/KRS-dev/proeven_verzameling).
