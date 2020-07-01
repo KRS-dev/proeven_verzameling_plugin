@@ -714,7 +714,7 @@ class ProevenVerzamelingTask(QgsTask):
         if self.trx_bool:
             dict_trx,  fig_list = \
                 self.trx(df_gm_filt_on_z.GTM_ID)
-            if not dict_trx:
+            if dict_trx:
                 df_dict.update(dict_trx)
 
         if self.isCanceled():
@@ -723,7 +723,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         if self.sdp_bool:
             dict_sdp = self.sdp(df_gm_filt_on_z.GTM_ID)
-            if not dict_sdp:
+            if dict_sdp:
                 df_dict.update(dict_sdp)
         
         if self.isCanceled():
@@ -768,7 +768,7 @@ class ProevenVerzamelingTask(QgsTask):
             
             if self.trx_bool:  
                 if self.save_plot:
-                    if not fig_list:
+                    if fig_list:
                         i = 1
                         for fig in fig_list:
                             fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
