@@ -27,6 +27,7 @@ import pandas as pd
 import numpy as np
 import cx_Oracle
 from typing import Union, List, Dict
+import warnings
 
 # Import all necessary classes from QGIS
 from qgis.core import QgsDataSourceUri, QgsCredentials, Qgis, QgsTask, QgsApplication, QgsVectorLayer
@@ -713,7 +714,8 @@ class ProevenVerzamelingTask(QgsTask):
         if self.trx_bool:
             dict_trx,  fig_list = \
                 self.trx(df_gm_filt_on_z.GTM_ID)
-            df_dict.update(dict_trx)
+            if not dict_trx:
+                df_dict.update(dict_trx)
 
         if self.isCanceled():
             return False
@@ -721,7 +723,8 @@ class ProevenVerzamelingTask(QgsTask):
 
         if self.sdp_bool:
             dict_sdp = self.sdp(df_gm_filt_on_z.GTM_ID)
-            df_dict.update(dict_sdp)
+            if not dict_sdp:
+                df_dict.update(dict_sdp)
         
         if self.isCanceled():
             return False
@@ -765,10 +768,11 @@ class ProevenVerzamelingTask(QgsTask):
             
             if self.trx_bool:  
                 if self.save_plot:
-                    i = 1
-                    for fig in fig_list:
-                        fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
-                        i = i + 1
+                    if not fig_list:
+                        i = 1
+                        for fig in fig_list:
+                            fig.savefig(os.path.join(self.output_location, 'fig_{}.pdf'.format(i)))
+                            i = i + 1
 
         if self.isCanceled():
             return False
@@ -787,21 +791,24 @@ class ProevenVerzamelingTask(QgsTask):
         
         Returns
         ----------
-        df_dict: dict[pandas.DataFrame or list[pandas.DataFrame]]
+        df_dict: dict[pandas.DataFrame or list[pandas.DataFrame]] or None
             Returns a dictionary of pd.DataFrames. The key
             for each DataFrame is the (sheet)name. Multiple pd.DataFrames which need to
             be exported in a single sheet (such as statistics) are managed by putting
             them in a list inside the dictionary.
-        fig_list: list[numpy.Figure or None]
+        fig_list: list[numpy.Figure or None] or None
             Statistic plot Figures. If save_plot is False returns list of None.
         """
         rek_selectie = [self.ea]
 
         df_trx = self.qb.get_trx(gtm_ids, proef_type=self.proef_types)
+        if df_trx is None:
+            return None, None
 
         df_trx = self.qb.select_on_vg(df_trx, self.maxVg, self.minVg)
         if df_trx.empty:
-            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Triaxiaalproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
+            warnings.warn('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Triaxiaalproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
+            return None, None
         # Get all TRX results, TRX deelproeven and TRX deelproef results
         df_trx_results = self.qb.get_trx_result(df_trx.GTM_ID)
         df_trx_dlp = self.qb.get_trx_dlp(df_trx.GTM_ID)
@@ -818,7 +825,7 @@ class ProevenVerzamelingTask(QgsTask):
 
         lstsqrs_list = []
         fig_list = []
-        # Doing statistics on the select TRX proeven
+        # Doing statistics on the selected TRX proeven
         if len(df_trx.index) > 1:
 
             if self.volG_trx is None:
@@ -902,76 +909,79 @@ class ProevenVerzamelingTask(QgsTask):
 
         df_dict = {}
         df_sdp = self.qb.get_sdp(gtm_ids)
-        if df_sdp.empty:
-            raise pd.errors.EmptyDataError('De geselecteerde meetpunten bevatten geen samendrukkingsproeven.')
+        if df_sdp is None:
+            warnings.warn('De geselecteerde meetpunten bevatten geen samendrukkingsproeven.')
+            return None
+        
         df_sdp = self.qb.select_on_vg(df_sdp, self.maxVg, self.minVg)
         if df_sdp.empty:
-            raise pd.errors.EmptyDataError('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Samendrukkingsproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
-        else:
-            df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
-            df_dict.update({'BIS_SDP_Proeven': df_sdp,
-                    'BIS_SDP_Resultaten': df_sdp_result})
+            warnings.warn('Tussen {minVg} en {maxVg} kn/m3 volumegewicht zijn er geen Samendrukkingsproeven.'.format(minVg=self.minVg, maxVg=self.maxVg))
+            return None
+        
+        df_sdp_result = self.qb.get_sdp_result(df_sdp.GTM_ID)
+        df_dict.update({'BIS_SDP_Proeven': df_sdp,
+                'BIS_SDP_Resultaten': df_sdp_result})
             
-            if self.volG_sdp is None:
-                # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
-                minvg, maxvg = min(df_sdp.VOLUMEGEWICHT_NAT), max(
-                    df_sdp.VOLUMEGEWICHT_NAT)
-                N = round(len(df_sdp.index) / 5) + 1
-                cutoff = 1  # The interval cant be lower than 1 kn/m3
-                if (maxvg-minvg)/N > cutoff:
-                    Vg_linspace = np.linspace(minvg, maxvg, N)
-                else:
-                    N = round((maxvg-minvg)/cutoff)
-                    if N < 2:
-                        Vg_linspace = np.linspace(minvg, maxvg, 2)
-                    else:
-                        Vg_linspace = np.linspace(minvg, maxvg, N)
-
-                Vgmax = Vg_linspace[1:]
-                Vgmin = Vg_linspace[0:-1]
+        if self.volG_sdp is None:
+            # Create a linear space between de maximal volumetric weight and the minimal volumetric weight
+            minvg, maxvg = min(df_sdp.VOLUMEGEWICHT_NAT), max(
+                df_sdp.VOLUMEGEWICHT_NAT)
+            N = round(len(df_sdp.index) / 5) + 1
+            cutoff = 1  # The interval cant be lower than 1 kn/m3
+            if (maxvg-minvg)/N > cutoff:
+                Vg_linspace = np.linspace(minvg, maxvg, N)
             else:
-                Vgmax = self.volG_sdp[1:]
-                Vgmin = self.volG_sdp[0:-1]
+                N = round((maxvg-minvg)/cutoff)
+                if N < 2:
+                    Vg_linspace = np.linspace(minvg, maxvg, 2)
+                else:
+                    Vg_linspace = np.linspace(minvg, maxvg, N)
 
-            sdp_stat_list = []
-            sdp_stat_data_list = []
-            for vgmin, vgmax in zip(Vgmin, Vgmax):
-                sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] <= vgmax)]
-                sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
+            Vgmax = Vg_linspace[1:]
+            Vgmin = Vg_linspace[0:-1]
+        else:
+            Vgmax = self.volG_sdp[1:]
+            Vgmin = self.volG_sdp[0:-1]
 
-                rows = []
-                for i, sdprow in sdp_slice.iterrows():
-                    gtm_id = sdprow['GTM_ID']
-                    grensspanning = np.max(sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']])
-                    df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id)].sort_values('STEP')
-                    oldrow = None
-                    for i, row in df.iterrows():
-                        if oldrow is not None:
-                            if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
-                                rows.append(row)
-                                break
-                        oldrow = row
+        sdp_stat_list = []
+        sdp_stat_data_list = []
+        for vgmin, vgmax in zip(Vgmin, Vgmax):
+            sdp = df_sdp[(df_sdp['VOLUMEGEWICHT_NAT'] >= vgmin) & (df_sdp['VOLUMEGEWICHT_NAT'] <= vgmax)]
+            sdp_slice = sdp[['GTM_ID', 'KOPPEJAN_PG', 'BJERRUM_PG']]
+
+            rows = []
+            for i, sdprow in sdp_slice.iterrows():
+                gtm_id = sdprow['GTM_ID']
+                grensspanning = np.max(sdprow[['KOPPEJAN_PG', 'BJERRUM_PG']])
+                df = df_sdp_result[(df_sdp_result['GTM_ID'] == gtm_id)].sort_values('STEP')
+                oldrow = None
+                for i, row in df.iterrows():
+                    if oldrow is not None:
+                        if (row['LOAD'] > grensspanning) & (oldrow['LOAD'] > grensspanning):
+                            rows.append(row)
+                            break
+                    oldrow = row
                 
-                vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
+            vg_str = 'Vg: {} - {} KN/m^3'.format(round(vgmin, 2), round(vgmax, 2))
 
-                df_out = pd.DataFrame(columns=df_sdp_result.columns)
-                df_out = df_out.append(rows)
-                df_out.index.name = vg_str
+            df_out = pd.DataFrame(columns=df_sdp_result.columns)
+            df_out = df_out.append(rows)
+            df_out.index.name = vg_str
                 
-                sdp_stat_data_list.append(df_out)
+            sdp_stat_data_list.append(df_out)
 
-                df_out_val = df_out.iloc[:, 3:]
-                sdp_stat = df_out_val.agg(['mean', 'std', 'count'])
-                sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
-                sdp_stat = sdp_stat.T
-                sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
-                sdp_stat_list.append(sdp_stat)
+            df_out_val = df_out.iloc[:, 3:]
+            sdp_stat = df_out_val.agg(['mean', 'std', 'count'])
+            sdp_stat.index = pd.MultiIndex.from_tuples([(vg_str, 'Mean'), (vg_str, 'Std'), (vg_str, 'Count')])
+            sdp_stat = sdp_stat.T
+            sdp_stat[(vg_str, 'Count')] = sdp_stat[(vg_str, 'Count')].astype('int64')
+            sdp_stat_list.append(sdp_stat)
             
-            sdp_stat = pd.concat(sdp_stat_list, 1)
-            df_dict.update({
-                'SDP_RAW': sdp_stat_data_list,
-                'SDP_STAT': sdp_stat
-            })
+        sdp_stat = pd.concat(sdp_stat_list, 1)
+        df_dict.update({
+            'SDP_RAW': sdp_stat_data_list,
+            'SDP_STAT': sdp_stat
+        })
 
         return df_dict
 
