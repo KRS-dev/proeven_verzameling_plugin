@@ -105,7 +105,7 @@ Deze instructies zorgen dat je QGIS plug-in geinstalleerd is en je hem kan gebru
 
 ### Installeren
 
-Een stap bij stap serie hoe je de [proeven_verzameling_plugin](https://github.com/KRS-dev/proeven_verzameling_plugin) kan installeren in QGIS.
+Een stappenplan hoe je de [proeven_verzameling_plugin](https://github.com/KRS-dev/proeven_verzameling_plugin) kan installeren in QGIS.
 
 Stap 1: Download de .zip file van de github repository 
 
