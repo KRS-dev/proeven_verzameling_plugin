@@ -606,7 +606,9 @@ class ProevenVerzamelingTask(QgsTask):
         Finished() is called from the main thread and can therefore raise exceptions.
         """
         try:
-            result = self.get_data()
+            with warnings.catch_warnings(record=True) as ws:
+                result = self.get_data()
+                self.warnings=ws
             if result:
                 return True
             else:
@@ -631,6 +633,14 @@ class ProevenVerzamelingTask(QgsTask):
             Result is the return value from self.run
         """
         if result:
+            if self.warnings:
+                for warning in self.warnings:    
+                    self.iface.messageBar().pushMessage(
+                        'Task: "{name}" threw a warning: {warning}.'.format(
+                            name=self.description(),
+                            warning=warning.message,
+                        Qgis.Warning,
+                        duration=3)
             self.iface.messageBar().pushMessage(
                 'Task: "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
@@ -638,9 +648,17 @@ class ProevenVerzamelingTask(QgsTask):
                 Qgis.Info,
                 duration=3)
         else:
+            if self.warnings:
+                for warning in self.warnings:    
+                    self.iface.messageBar().pushMessage(
+                        'Task: "{name}" threw a warning: {warning}.'.format(
+                            name=self.description(),
+                            warning=warning.message,
+                        Qgis.Warning,
+                        duration=3)
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
-                    'Task: "{name}" not successful but without '
+                    'Task: "{name}" was not successful but without '
                     'exception (probably the task was manually '
                     'canceled by the user)'.format(
                         name=self.description()),
