@@ -640,14 +640,14 @@ class ProevenVerzamelingTask(QgsTask):
                             name=self.description(),
                             warning=warning.message),
                         Qgis.Warning,
-                        duration=3
+                        duration=5
                     )
             self.iface.messageBar().pushMessage(
                 'Task: "{name}" completed in {duration} seconds.'.format(
                     name=self.description(),
                     duration=round(self.elapsedTime()/1000, 2)),
                 Qgis.Info,
-                duration=7)
+                duration=3)
         else:
             if self.warnings:
                 for warning in self.warnings:    
@@ -656,7 +656,7 @@ class ProevenVerzamelingTask(QgsTask):
                             name=self.description(),
                             warning=warning.message),
                         Qgis.Warning,
-                        duration=7
+                        duration=5
                     )
             if self.exception is None:
                 self.iface.messageBar().pushMessage(
@@ -665,7 +665,7 @@ class ProevenVerzamelingTask(QgsTask):
                     'canceled by the user)'.format(
                         name=self.description()),
                     Qgis.Warning,
-                    duration=7)
+                    duration=5)
             else:
                 self.iface.messageBar().pushMessage(
                     'Task: "{name}" threw an Exception: {exception}'.format(
